@@ -35,12 +35,12 @@ export default function LoadingSteps({ currentStep }: LoadingStepsProps) {
   return (
     <div className="flex flex-col items-center gap-8 py-12">
       <div className="text-center animate-fade-in">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-50 border border-purple-200 mb-4">
-          <div className="w-2 h-2 rounded-full bg-purple-500 pulse-dot" />
-          <span className="text-sm text-purple-700 font-medium">Analysis in progress</span>
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-midnight-card border border-amber-primary/30 mb-4">
+          <div className="w-2 h-2 rounded-full bg-amber-primary pulse-dot" />
+          <span className="text-sm text-amber-primary font-medium">Analysis in progress</span>
         </div>
-        <h2 className="text-2xl font-bold text-gray-900">Reviewing your PR</h2>
-        <p className="text-gray-500 mt-2 text-sm">This usually takes 15–30 seconds</p>
+        <h2 className="text-2xl font-bold text-gray-100">Reviewing your PR</h2>
+        <p className="text-gray-400 mt-2 text-sm">This usually takes 15–30 seconds</p>
       </div>
 
       <div className="flex flex-col gap-4 w-full max-w-sm">
@@ -53,20 +53,20 @@ export default function LoadingSteps({ currentStep }: LoadingStepsProps) {
               key={step.key}
               className={`flex items-center gap-4 p-4 rounded-xl border transition-all duration-500 ${
                 status === "active"
-                  ? "border-purple-200 bg-purple-50"
+                  ? "border-amber-primary/30 bg-midnight-card"
                   : status === "done"
-                  ? "border-green-200 bg-green-50"
-                  : "border-gray-100 bg-gray-50 opacity-40"
+                  ? "border-teal-success/30 bg-midnight-card"
+                  : "border-midnight-border bg-midnight-base opacity-40"
               }`}
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               <div
                 className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
                   status === "done"
-                    ? "bg-green-100 text-green-600"
+                    ? "bg-teal-success/20 text-teal-success"
                     : status === "active"
-                    ? "bg-purple-100 text-purple-600"
-                    : "bg-gray-100 text-gray-400"
+                    ? "bg-amber-primary/20 text-amber-primary"
+                    : "bg-midnight-border text-gray-500"
                 }`}
               >
                 {status === "done" ? (
@@ -82,10 +82,10 @@ export default function LoadingSteps({ currentStep }: LoadingStepsProps) {
                 <div
                   className={`font-semibold text-sm ${
                     status === "done"
-                      ? "text-green-700"
+                      ? "text-teal-success"
                       : status === "active"
-                      ? "text-purple-700"
-                      : "text-gray-400"
+                      ? "text-amber-primary"
+                      : "text-gray-500"
                   }`}
                 >
                   {step.label}
@@ -98,7 +98,7 @@ export default function LoadingSteps({ currentStep }: LoadingStepsProps) {
                   {[0, 1, 2].map((dot) => (
                     <div
                       key={dot}
-                      className="w-1.5 h-1.5 rounded-full bg-purple-400"
+                      className="w-1.5 h-1.5 rounded-full bg-amber-primary"
                       style={{
                         animation: "pulseDot 1.5s ease-in-out infinite",
                         animationDelay: `${dot * 0.2}s`,
@@ -109,7 +109,7 @@ export default function LoadingSteps({ currentStep }: LoadingStepsProps) {
               )}
 
               {status === "done" && (
-                <div className="text-xs text-green-600 font-medium">Done</div>
+                <div className="text-xs text-teal-success font-medium">Done</div>
               )}
             </div>
           );
@@ -121,7 +121,7 @@ export default function LoadingSteps({ currentStep }: LoadingStepsProps) {
         {Array.from({ length: 12 }).map((_, i) => (
           <div
             key={i}
-            className="w-1.5 rounded-full bg-purple-200"
+            className="w-1.5 rounded-full bg-amber-primary/30"
             style={{
               height: `${16 + Math.sin(i * 0.8) * 12}px`,
               animation: "pulseDot 1.5s ease-in-out infinite",

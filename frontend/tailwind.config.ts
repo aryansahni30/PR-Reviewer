@@ -8,6 +8,11 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      colors: {
+        midnight: { base: '#0F111A', card: '#181B28', border: '#262A3D' },
+        amber: { primary: '#FFC300', hover: '#FFD166', glow: 'rgba(255, 195, 0, 0.2)' },
+        teal: { success: '#06D6A0' },
+      },
       fontFamily: {
         sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
         mono: ["var(--font-geist-mono)", "Menlo", "Monaco", "monospace"],

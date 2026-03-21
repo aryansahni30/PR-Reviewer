@@ -75,12 +75,12 @@ export default function LandingInput({
     <div className="relative">
       {/* Toast */}
       {toast && (
-        <div className="fixed top-6 right-6 z-50 max-w-sm px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-lg flex items-center gap-3 toast-enter">
-          <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
-          <p className="text-sm text-gray-700 flex-1">{toast}</p>
+        <div className="fixed top-6 right-6 z-50 max-w-sm px-4 py-3 bg-midnight-card border border-midnight-border rounded-xl shadow-lg flex items-center gap-3 toast-enter">
+          <AlertTriangle className="w-4 h-4 text-amber-primary flex-shrink-0" />
+          <p className="text-sm text-gray-300 flex-1">{toast}</p>
           <button
             onClick={() => setToast(null)}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-500 hover:text-gray-300"
           >
             <X className="w-4 h-4" />
           </button>
@@ -95,7 +95,7 @@ export default function LandingInput({
               key={s.url}
               type="button"
               onClick={() => setUrl(s.url)}
-              className="px-3 py-1.5 rounded-lg text-xs text-gray-500 bg-white border border-gray-200 hover:border-purple-300 hover:text-purple-600 transition-all shadow-sm"
+              className="px-3 py-1.5 rounded-lg text-xs text-gray-400 bg-midnight-card border border-midnight-border hover:border-amber-primary hover:text-amber-primary transition-all shadow-sm"
             >
               {s.label}
             </button>
@@ -106,19 +106,19 @@ export default function LandingInput({
       {/* Input bar */}
       <form onSubmit={handleSubmit}>
         <div
-          className={`relative flex items-center bg-white border-2 rounded-2xl overflow-hidden transition-all duration-200 shadow-sm ${
+          className={`relative flex items-center bg-midnight-card border-2 rounded-2xl overflow-hidden transition-all duration-200 shadow-sm ${
             isFocused
-              ? "border-purple-500 input-glow"
+              ? "border-amber-primary input-glow"
               : isValid
-              ? "border-green-400 shadow-green-100"
-              : "border-gray-200 hover:border-gray-300"
+              ? "border-teal-success shadow-teal-success/10"
+              : "border-midnight-border hover:border-gray-500"
           }`}
         >
           {/* Search icon */}
           <div className="pl-4 pr-3 flex-shrink-0">
             <Search
               className={`w-5 h-5 transition-colors ${
-                isFocused ? "text-purple-500" : "text-gray-400"
+                isFocused ? "text-amber-primary" : "text-gray-500"
               }`}
             />
           </div>
@@ -134,7 +134,7 @@ export default function LandingInput({
                   transition: "opacity 0.28s ease",
                 }}
               >
-                <span className="text-gray-400 text-sm truncate font-mono">
+                <span className="text-gray-600 text-sm truncate font-mono">
                   {ROTATING_PLACEHOLDERS[placeholderIndex]}
                 </span>
               </div>
@@ -147,15 +147,15 @@ export default function LandingInput({
               onBlur={() => setIsFocused(false)}
               placeholder={isFocused && !url ? "https://github.com/owner/repo/pull/123" : ""}
               disabled={isLoading}
-              className="w-full py-4 text-sm text-gray-900 bg-transparent outline-none disabled:opacity-50 disabled:cursor-not-allowed font-mono"
+              className="w-full py-4 text-sm text-gray-100 bg-transparent outline-none disabled:opacity-50 disabled:cursor-not-allowed font-mono"
             />
           </div>
 
           {/* Valid URL indicator */}
           {isValid && !isLoading && (
             <div className="flex items-center gap-1.5 pr-3 flex-shrink-0">
-              <Check className="w-4 h-4 text-green-500" />
-              <span className="text-xs text-green-600 font-medium hidden sm:block whitespace-nowrap">
+              <Check className="w-4 h-4 text-teal-success" />
+              <span className="text-xs text-teal-success font-medium hidden sm:block whitespace-nowrap">
                 Valid GitHub PR
               </span>
             </div>
@@ -166,7 +166,7 @@ export default function LandingInput({
             <button
               type="submit"
               disabled={isLoading || !url.trim()}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-white text-sm bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95 shadow-sm whitespace-nowrap"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-midnight-base text-sm bg-amber-primary hover:bg-amber-hover disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95 shadow-sm whitespace-nowrap"
             >
               <Zap className="w-4 h-4" />
               {isLoading ? "Analyzing…" : "Analyze PR"}
@@ -180,7 +180,7 @@ export default function LandingInput({
         <div className="mt-4 flex justify-center">
           <button
             onClick={onHarsher}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium border border-orange-200 bg-orange-50 text-orange-600 hover:bg-orange-100 hover:border-orange-300 transition-all"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium border border-orange-800/50 bg-orange-900/20 text-orange-400 hover:bg-orange-900/30 hover:border-orange-700/50 transition-all"
           >
             Re-analyze with stricter mode
           </button>
