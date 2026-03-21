@@ -8,14 +8,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      colors: {
-        gray: {
-          950: "#030712",
-        },
-      },
       fontFamily: {
-        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
-        mono: ["var(--font-mono)", "Menlo", "Monaco", "monospace"],
+        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-geist-mono)", "Menlo", "Monaco", "monospace"],
       },
       animation: {
         "fade-in": "fadeIn 0.3s ease-in-out",

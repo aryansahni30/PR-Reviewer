@@ -9,30 +9,15 @@ interface LoadingStepsProps {
 }
 
 const steps: { key: LoadingStep; label: string; sublabel: string; icon: React.ElementType }[] = [
-  {
-    key: "fetching",
-    label: "Fetching diff",
-    sublabel: "Connecting to GitHub API",
-    icon: GitPullRequest,
-  },
-  {
-    key: "filtering",
-    label: "Filtering lines",
-    sublabel: "Processing changed code",
-    icon: Filter,
-  },
-  {
-    key: "analyzing",
-    label: "Consulting AI",
-    sublabel: "Agent is reviewing your code",
-    icon: Brain,
-  },
+  { key: "fetching", label: "Fetching diff", sublabel: "Connecting to GitHub API", icon: GitPullRequest },
+  { key: "filtering", label: "Filtering lines", sublabel: "Processing changed code", icon: Filter },
+  { key: "analyzing", label: "Consulting AI", sublabel: "Agent is reviewing your code", icon: Brain },
 ];
 
 const stepOrder: LoadingStep[] = ["idle", "fetching", "filtering", "analyzing", "done"];
 
 export default function LoadingSteps({ currentStep }: LoadingStepsProps) {
-  const [visibleSteps, setVisibleSteps] = useState<number>(0);
+  const [, setVisibleSteps] = useState<number>(0);
 
   useEffect(() => {
     const currentIndex = stepOrder.indexOf(currentStep);
@@ -49,17 +34,15 @@ export default function LoadingSteps({ currentStep }: LoadingStepsProps) {
 
   return (
     <div className="flex flex-col items-center gap-8 py-12">
-      {/* Header */}
       <div className="text-center animate-fade-in">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 mb-4">
-          <div className="w-2 h-2 rounded-full bg-blue-400 pulse-dot" />
-          <span className="text-sm text-blue-400 font-medium">Analysis in progress</span>
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-50 border border-purple-200 mb-4">
+          <div className="w-2 h-2 rounded-full bg-purple-500 pulse-dot" />
+          <span className="text-sm text-purple-700 font-medium">Analysis in progress</span>
         </div>
-        <h2 className="text-2xl font-bold text-white">Reviewing your PR</h2>
-        <p className="text-gray-400 mt-2 text-sm">This usually takes 15–30 seconds</p>
+        <h2 className="text-2xl font-bold text-gray-900">Reviewing your PR</h2>
+        <p className="text-gray-500 mt-2 text-sm">This usually takes 15–30 seconds</p>
       </div>
 
-      {/* Steps */}
       <div className="flex flex-col gap-4 w-full max-w-sm">
         {steps.map((step, index) => {
           const status = getStepStatus(step.key);
@@ -70,21 +53,20 @@ export default function LoadingSteps({ currentStep }: LoadingStepsProps) {
               key={step.key}
               className={`flex items-center gap-4 p-4 rounded-xl border transition-all duration-500 ${
                 status === "active"
-                  ? "border-blue-500/40 bg-blue-500/5"
+                  ? "border-purple-200 bg-purple-50"
                   : status === "done"
-                  ? "border-green-500/30 bg-green-500/5"
-                  : "border-gray-800 bg-gray-900/30 opacity-40"
+                  ? "border-green-200 bg-green-50"
+                  : "border-gray-100 bg-gray-50 opacity-40"
               }`}
               style={{ animationDelay: `${index * 0.1}s` }}
             >
-              {/* Icon / Status indicator */}
               <div
                 className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
                   status === "done"
-                    ? "bg-green-500/20 text-green-400"
+                    ? "bg-green-100 text-green-600"
                     : status === "active"
-                    ? "bg-blue-500/20 text-blue-400"
-                    : "bg-gray-800 text-gray-600"
+                    ? "bg-purple-100 text-purple-600"
+                    : "bg-gray-100 text-gray-400"
                 }`}
               >
                 {status === "done" ? (
@@ -96,29 +78,27 @@ export default function LoadingSteps({ currentStep }: LoadingStepsProps) {
                 )}
               </div>
 
-              {/* Labels */}
               <div className="flex-1">
                 <div
                   className={`font-semibold text-sm ${
                     status === "done"
-                      ? "text-green-400"
+                      ? "text-green-700"
                       : status === "active"
-                      ? "text-white"
-                      : "text-gray-600"
+                      ? "text-purple-700"
+                      : "text-gray-400"
                   }`}
                 >
                   {step.label}
                 </div>
-                <div className="text-xs text-gray-500 mt-0.5">{step.sublabel}</div>
+                <div className="text-xs text-gray-400 mt-0.5">{step.sublabel}</div>
               </div>
 
-              {/* Progress indicator for active */}
               {status === "active" && (
                 <div className="flex gap-1">
                   {[0, 1, 2].map((dot) => (
                     <div
                       key={dot}
-                      className="w-1.5 h-1.5 rounded-full bg-blue-400"
+                      className="w-1.5 h-1.5 rounded-full bg-purple-400"
                       style={{
                         animation: "pulseDot 1.5s ease-in-out infinite",
                         animationDelay: `${dot * 0.2}s`,
@@ -129,7 +109,7 @@ export default function LoadingSteps({ currentStep }: LoadingStepsProps) {
               )}
 
               {status === "done" && (
-                <div className="text-xs text-green-500 font-medium">Done</div>
+                <div className="text-xs text-green-600 font-medium">Done</div>
               )}
             </div>
           );
@@ -141,7 +121,7 @@ export default function LoadingSteps({ currentStep }: LoadingStepsProps) {
         {Array.from({ length: 12 }).map((_, i) => (
           <div
             key={i}
-            className="w-1.5 rounded-full bg-blue-500/30"
+            className="w-1.5 rounded-full bg-purple-200"
             style={{
               height: `${16 + Math.sin(i * 0.8) * 12}px`,
               animation: "pulseDot 1.5s ease-in-out infinite",

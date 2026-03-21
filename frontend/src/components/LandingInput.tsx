@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Zap, AlertTriangle, X } from "lucide-react";
+import { Search, Zap, Check, AlertTriangle, X } from "lucide-react";
 
 interface LandingInputProps {
   onAnalyze: (url: string, strictMode: boolean) => void;
@@ -11,6 +11,21 @@ interface LandingInputProps {
   hasUsedStrictMode: boolean;
 }
 
+const SAMPLE_PRS = [
+  { label: "react", url: "https://github.com/facebook/react/pull/31901" },
+  { label: "vscode", url: "https://github.com/microsoft/vscode/pull/243992" },
+  { label: "next.js", url: "https://github.com/vercel/next.js/pull/75453" },
+];
+
+const ROTATING_PLACEHOLDERS = [
+  "https://github.com/facebook/react/pull/31901",
+  "https://github.com/microsoft/vscode/pull/243992",
+  "https://github.com/vercel/next.js/pull/75453",
+];
+
+const isValidGitHubPRUrl = (val: string): boolean =>
+  /^https?:\/\/github\.com\/[^/]+\/[^/]+\/pull\/\d+/.test(val);
+
 export default function LandingInput({
   onAnalyze,
   isLoading,
@@ -19,12 +34,25 @@ export default function LandingInput({
   hasUsedStrictMode,
 }: LandingInputProps) {
   const [url, setUrl] = useState("");
-  const [showLargePRWarning, setShowLargePRWarning] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [placeholderOpacity, setPlaceholderOpacity] = useState(1);
   const [toast, setToast] = useState<string | null>(null);
 
-  const isValidGitHubPRUrl = (val: string): boolean => {
-    return /^https?:\/\/github\.com\/[^/]+\/[^/]+\/pull\/\d+/.test(val);
-  };
+  const isValid = isValidGitHubPRUrl(url);
+
+  // Rotate placeholder when input is empty and unfocused
+  useEffect(() => {
+    if (url || isFocused) return;
+    const interval = setInterval(() => {
+      setPlaceholderOpacity(0);
+      setTimeout(() => {
+        setPlaceholderIndex((i) => (i + 1) % ROTATING_PLACEHOLDERS.length);
+        setPlaceholderOpacity(1);
+      }, 280);
+    }, 3200);
+    return () => clearInterval(interval);
+  }, [url, isFocused]);
 
   const showToast = (message: string) => {
     setToast(message);
@@ -34,46 +62,40 @@ export default function LandingInput({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
-    if (!isValidGitHubPRUrl(url)) {
-      showToast("Please enter a valid GitHub PR URL (e.g. https://github.com/owner/repo/pull/123)");
+    if (!isValid) {
+      showToast(
+        "Please enter a valid GitHub PR URL — e.g. https://github.com/owner/repo/pull/123"
+      );
       return;
     }
     onAnalyze(url.trim(), false);
   };
 
-  const handleUrlChange = (val: string) => {
-    setUrl(val);
-    // Show large PR warning if URL looks valid and user has typed something
-    // We'll update this when we actually have the line count from the result
-    setShowLargePRWarning(false);
-  };
-
   return (
     <div className="relative">
-      {/* Toast notification */}
+      {/* Toast */}
       {toast && (
-        <div className="fixed top-6 right-6 z-50 max-w-sm px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl flex items-center gap-3 toast-enter">
-          <AlertTriangle className="w-4 h-4 text-yellow-400 flex-shrink-0" />
-          <p className="text-sm text-gray-200 flex-1">{toast}</p>
-          <button onClick={() => setToast(null)} className="text-gray-500 hover:text-gray-300">
+        <div className="fixed top-6 right-6 z-50 max-w-sm px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-lg flex items-center gap-3 toast-enter">
+          <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+          <p className="text-sm text-gray-700 flex-1">{toast}</p>
+          <button
+            onClick={() => setToast(null)}
+            className="text-gray-400 hover:text-gray-600"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {/* Sample PR suggestions */}
+      {/* Sample PR chips — shown only on landing */}
       {!hasResult && !isLoading && (
         <div className="mb-3 flex flex-wrap gap-2">
-          {[
-            { label: "react", url: "https://github.com/facebook/react/pull/31901" },
-            { label: "vscode", url: "https://github.com/microsoft/vscode/pull/243992" },
-            { label: "next.js", url: "https://github.com/vercel/next.js/pull/75453" },
-          ].map((s) => (
+          {SAMPLE_PRS.map((s) => (
             <button
               key={s.url}
               type="button"
               onClick={() => setUrl(s.url)}
-              className="px-3 py-1 rounded-lg text-xs text-gray-400 bg-gray-900 border border-gray-800 hover:border-gray-600 hover:text-gray-200 transition-all"
+              className="px-3 py-1.5 rounded-lg text-xs text-gray-500 bg-white border border-gray-200 hover:border-purple-300 hover:text-purple-600 transition-all shadow-sm"
             >
               {s.label}
             </button>
@@ -81,56 +103,84 @@ export default function LandingInput({
         </div>
       )}
 
-      {/* Main input form */}
-      <form onSubmit={handleSubmit} className="relative">
-        <div className="relative flex items-center gap-3">
-          <div className="relative flex-1">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
-              <Search className="w-5 h-5" />
-            </div>
-            <input
-              type="url"
-              value={url}
-              onChange={(e) => handleUrlChange(e.target.value)}
-              placeholder="https://github.com/owner/repo/pull/123"
-              disabled={isLoading}
-              className="w-full pl-12 pr-4 py-4 bg-gray-900 border border-gray-700 rounded-xl text-white placeholder-gray-600 text-base focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+      {/* Input bar */}
+      <form onSubmit={handleSubmit}>
+        <div
+          className={`relative flex items-center bg-white border-2 rounded-2xl overflow-hidden transition-all duration-200 shadow-sm ${
+            isFocused
+              ? "border-purple-500 input-glow"
+              : isValid
+              ? "border-green-400 shadow-green-100"
+              : "border-gray-200 hover:border-gray-300"
+          }`}
+        >
+          {/* Search icon */}
+          <div className="pl-4 pr-3 flex-shrink-0">
+            <Search
+              className={`w-5 h-5 transition-colors ${
+                isFocused ? "text-purple-500" : "text-gray-400"
+              }`}
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={isLoading || !url.trim()}
-            className="flex-shrink-0 flex items-center gap-2.5 px-6 py-4 rounded-xl font-semibold text-white text-sm bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 active:scale-95"
-          >
-            <Zap className="w-4 h-4" />
-            {isLoading ? "Analyzing..." : "Analyze PR"}
-          </button>
+          {/* Input + rotating placeholder */}
+          <div className="relative flex-1 min-w-0">
+            {/* Fake rotating placeholder — only when empty */}
+            {!url && (
+              <div
+                className="absolute inset-0 flex items-center pointer-events-none"
+                style={{
+                  opacity: isFocused ? 0 : placeholderOpacity,
+                  transition: "opacity 0.28s ease",
+                }}
+              >
+                <span className="text-gray-400 text-sm truncate font-mono">
+                  {ROTATING_PLACEHOLDERS[placeholderIndex]}
+                </span>
+              </div>
+            )}
+            <input
+              type="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              placeholder={isFocused && !url ? "https://github.com/owner/repo/pull/123" : ""}
+              disabled={isLoading}
+              className="w-full py-4 text-sm text-gray-900 bg-transparent outline-none disabled:opacity-50 disabled:cursor-not-allowed font-mono"
+            />
+          </div>
+
+          {/* Valid URL indicator */}
+          {isValid && !isLoading && (
+            <div className="flex items-center gap-1.5 pr-3 flex-shrink-0">
+              <Check className="w-4 h-4 text-green-500" />
+              <span className="text-xs text-green-600 font-medium hidden sm:block whitespace-nowrap">
+                Valid GitHub PR
+              </span>
+            </div>
+          )}
+
+          {/* Analyze button — inside the bar */}
+          <div className="pr-2 flex-shrink-0">
+            <button
+              type="submit"
+              disabled={isLoading || !url.trim()}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-white text-sm bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95 shadow-sm whitespace-nowrap"
+            >
+              <Zap className="w-4 h-4" />
+              {isLoading ? "Analyzing…" : "Analyze PR"}
+            </button>
+          </div>
         </div>
       </form>
 
-      {/* Large PR warning */}
-      {showLargePRWarning && (
-        <div className="mt-3 flex items-center gap-2 px-4 py-2.5 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-          <AlertTriangle className="w-4 h-4 text-yellow-400 flex-shrink-0" />
-          <p className="text-sm text-yellow-300">
-            Large PR detected (&gt;500 lines). Consider splitting this PR for better reviewability.
-          </p>
-          <button
-            onClick={() => setShowLargePRWarning(false)}
-            className="ml-auto text-yellow-500 hover:text-yellow-300"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
-      {/* Re-analyze with stricter mode - shown after first analysis, hidden after used */}
+      {/* Re-analyze in strict mode — shown once after a result */}
       {hasResult && !isLoading && !hasUsedStrictMode && (
         <div className="mt-4 flex justify-center">
           <button
             onClick={onHarsher}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium border border-orange-500/30 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 hover:border-orange-500/50 transition-all"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium border border-orange-200 bg-orange-50 text-orange-600 hover:bg-orange-100 hover:border-orange-300 transition-all"
           >
             Re-analyze with stricter mode
           </button>

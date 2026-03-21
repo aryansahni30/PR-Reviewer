@@ -1,21 +1,15 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
 export const metadata: Metadata = {
-  title: "PR Code Reviewer — AI-Powered GitHub PR Analysis",
-  description:
-    "Analyze GitHub Pull Requests with Claude AI. Get instant feedback on code quality, bugs, and suggestions.",
-  keywords: ["code review", "AI", "GitHub", "pull request", "Claude", "Anthropic"],
+  title: "PR Reviewer — Code Review That Actually Ships",
+  description: "Paste any GitHub PR and get expert-level code review in under 30 seconds.",
+  keywords: ["code review", "GitHub", "pull request", "code quality"],
   openGraph: {
-    title: "PR Code Reviewer",
-    description: "AI-powered GitHub PR analysis using Claude",
+    title: "PR Reviewer",
+    description: "Paste a GitHub PR URL. Get a real code review.",
     type: "website",
   },
 };
@@ -26,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} dark`}>
-      <body className="min-h-screen bg-gray-950 text-white antialiased font-sans">
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+      <body className="min-h-screen bg-[#FAFAFA] text-gray-900 antialiased font-sans">
         {children}
       </body>
     </html>
