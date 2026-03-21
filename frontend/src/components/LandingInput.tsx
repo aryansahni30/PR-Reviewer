@@ -65,10 +65,9 @@ export default function LandingInput({
       {!hasResult && !isLoading && (
         <div className="mb-3 flex flex-wrap gap-2">
           {[
+            { label: "react", url: "https://github.com/facebook/react/pull/31901" },
             { label: "vscode", url: "https://github.com/microsoft/vscode/pull/243992" },
             { label: "next.js", url: "https://github.com/vercel/next.js/pull/75453" },
-            { label: "fastapi", url: "https://github.com/tiangolo/fastapi/pull/13015" },
-            { label: "supabase", url: "https://github.com/supabase/supabase/pull/32015" },
           ].map((s) => (
             <button
               key={s.url}
