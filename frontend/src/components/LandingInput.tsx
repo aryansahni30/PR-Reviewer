@@ -106,12 +106,12 @@ export default function LandingInput({
       {/* Input bar */}
       <form onSubmit={handleSubmit}>
         <div
-          className={`relative flex items-center bg-midnight-card border-2 rounded-2xl overflow-hidden transition-all duration-200 shadow-sm ${
+          className={`relative flex items-center bg-transparent border-2 rounded-2xl overflow-hidden transition-all duration-300 shadow-sm ${
             isFocused
-              ? "border-amber-primary input-glow"
+              ? "border-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.15)] bg-black/20"
               : isValid
-              ? "border-teal-success shadow-teal-success/10"
-              : "border-midnight-border hover:border-gray-500"
+              ? "border-teal-500 shadow-[0_0_15px_rgba(20,184,166,0.1)]"
+              : "border-white/10 hover:border-white/30 hover:bg-black/10"
           }`}
         >
           {/* Search icon */}
@@ -177,12 +177,13 @@ export default function LandingInput({
 
       {/* Re-analyze in strict mode — shown once after a result */}
       {hasResult && !isLoading && !hasUsedStrictMode && (
-        <div className="mt-4 flex justify-center">
+        <div className="mt-6 border-t border-white/5 pt-6 flex justify-center">
           <button
             onClick={onHarsher}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium border border-orange-800/50 bg-orange-900/20 text-orange-400 hover:bg-orange-900/30 hover:border-orange-700/50 transition-all"
+            className="group flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest border border-orange-500/30 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 hover:border-orange-500/60 hover:text-orange-300 transition-all shadow-[0_0_15px_rgba(249,115,22,0.1)] hover:shadow-[0_0_20px_rgba(249,115,22,0.2)]"
           >
-            Re-analyze with stricter mode
+            <Zap className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+            Re-analyze Strict Mode
           </button>
         </div>
       )}

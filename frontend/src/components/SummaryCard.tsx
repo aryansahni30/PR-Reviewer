@@ -31,18 +31,18 @@ export default function SummaryCard({ result }: SummaryCardProps) {
   const suggestions = result.issues.filter((i) => i.severity === "suggestion").length;
 
   return (
-    <div className="bg-midnight-card border border-midnight-border rounded-2xl p-6 animate-fade-in shadow-sm">
+    <div className="h-full p-2 sm:p-4 animate-fade-in flex flex-col justify-center">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-4">
+      <div className="flex items-start justify-between gap-4 mb-6">
         <div className="flex-1 min-w-0">
           <a
             href={result.pr_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex items-center gap-1.5 text-gray-100 hover:text-amber-primary transition-colors"
+            className="group flex items-center gap-2 text-white hover:text-amber-400 transition-colors"
           >
-            <h2 className="text-lg font-bold truncate">{result.pr_title}</h2>
-            <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+            <h2 className="text-xl sm:text-2xl font-bold truncate tracking-tight">{result.pr_title}</h2>
+            <ChevronRight className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 text-amber-400" />
           </a>
           <div className="flex items-center gap-3 mt-2 text-sm text-gray-400">
             <span className="flex items-center gap-1.5">
@@ -50,57 +50,57 @@ export default function SummaryCard({ result }: SummaryCardProps) {
               {result.pr_author}
             </span>
             <span className="text-gray-600">·</span>
-            <span>{result.repo_name}</span>
+            <span className="text-gray-400">{result.repo_name}</span>
             <span className="text-gray-600">·</span>
-            <span>#{result.pr_number}</span>
+            <span className="text-gray-400">#{result.pr_number}</span>
           </div>
         </div>
-        <span className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold border ${langColor}`}>
+        <span className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border bg-white/5 ${langColor}`}>
           {result.language}
         </span>
       </div>
 
       {/* Branch info */}
-      <div className="flex items-center gap-2 mb-4 px-3 py-2 bg-midnight-base border border-midnight-border rounded-lg text-sm">
+      <div className="flex items-center gap-3 mb-6 px-4 py-3 bg-white/5 border border-white/5 rounded-xl text-sm">
         <GitMerge className="w-4 h-4 text-gray-500" />
-        <code className="text-amber-primary font-mono text-xs">{result.pr_base_branch}</code>
-        <span className="text-gray-600">←</span>
-        <code className="text-amber-hover font-mono text-xs">{result.pr_head_branch}</code>
-        <span className="ml-auto flex items-center gap-1 text-gray-500 text-xs">
-          <FileCode className="w-3.5 h-3.5" />
+        <code className="text-amber-400 font-mono text-xs bg-amber-400/10 px-1.5 py-0.5 rounded">{result.pr_base_branch}</code>
+        <span className="text-gray-500">←</span>
+        <code className="text-teal-400 font-mono text-xs bg-teal-400/10 px-1.5 py-0.5 rounded">{result.pr_head_branch}</code>
+        <span className="ml-auto flex items-center gap-1.5 text-gray-400 text-xs font-medium">
+          <FileCode className="w-4 h-4" />
           {result.total_changed_lines} lines changed
         </span>
       </div>
 
       {/* Summary */}
-      <p className="text-gray-400 text-sm leading-relaxed mb-4">{result.summary}</p>
+      <p className="text-gray-300 text-base leading-relaxed mb-6">{result.summary}</p>
 
       {/* Stats */}
-      <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex items-center gap-3 flex-wrap mt-auto">
         {bugs > 0 && (
-          <div className="px-2.5 py-1.5 bg-red-900/30 border border-red-800/50 rounded-lg">
-            <span className="text-red-400 text-xs font-semibold">
+          <div className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-lg">
+            <span className="text-red-400 text-xs font-bold uppercase tracking-wide">
               {bugs} bug{bugs !== 1 ? "s" : ""}
             </span>
           </div>
         )}
         {warnings > 0 && (
-          <div className="px-2.5 py-1.5 bg-amber-900/30 border border-amber-800/50 rounded-lg">
-            <span className="text-amber-400 text-xs font-semibold">
+          <div className="px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+            <span className="text-amber-400 text-xs font-bold uppercase tracking-wide">
               {warnings} warning{warnings !== 1 ? "s" : ""}
             </span>
           </div>
         )}
         {suggestions > 0 && (
-          <div className="px-2.5 py-1.5 bg-green-900/30 border border-green-800/50 rounded-lg">
-            <span className="text-green-400 text-xs font-semibold">
+          <div className="px-3 py-1.5 bg-teal-500/10 border border-teal-500/20 rounded-lg">
+            <span className="text-teal-400 text-xs font-bold uppercase tracking-wide">
               {suggestions} suggestion{suggestions !== 1 ? "s" : ""}
             </span>
           </div>
         )}
         {result.issues.length === 0 && (
-          <div className="px-2.5 py-1.5 bg-teal-success/10 border border-teal-success/30 rounded-lg">
-            <span className="text-teal-success text-xs font-semibold">No issues found!</span>
+          <div className="px-3 py-1.5 bg-teal-500/10 border border-teal-500/20 rounded-lg">
+            <span className="text-teal-400 text-xs font-bold uppercase tracking-wide">No issues found!</span>
           </div>
         )}
       </div>

@@ -29,22 +29,22 @@ function parseDiffToFiles(issues: Issue[]): ParsedFile[] {
 
 const severityStyles = {
   bug: {
-    leftBorder: "border-l-red-400",
-    bg: "bg-red-900/20",
-    badge: "bg-red-900/40 text-red-400 border-red-700/50",
-    dot: "bg-red-400",
+    leftBorder: "border-l-red-500",
+    bg: "bg-red-500/5",
+    badge: "bg-red-500/20 text-red-300 border border-red-500/30",
+    dot: "bg-red-500",
   },
   warning: {
-    leftBorder: "border-l-amber-400",
-    bg: "bg-amber-900/20",
-    badge: "bg-amber-900/40 text-amber-400 border-amber-700/50",
-    dot: "bg-amber-400",
+    leftBorder: "border-l-amber-500",
+    bg: "bg-amber-500/5",
+    badge: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
+    dot: "bg-amber-500",
   },
   suggestion: {
-    leftBorder: "border-l-green-400",
-    bg: "bg-green-900/20",
-    badge: "bg-green-900/40 text-green-400 border-green-700/50",
-    dot: "bg-green-400",
+    leftBorder: "border-l-teal-500",
+    bg: "bg-teal-500/5",
+    badge: "bg-teal-500/20 text-teal-300 border border-teal-500/30",
+    dot: "bg-teal-500",
   },
 };
 
@@ -52,12 +52,12 @@ function FileBlock({ file }: { file: ParsedFile }) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="border border-midnight-border rounded-xl overflow-hidden shadow-sm">
+    <div className="border border-white/5 rounded-2xl overflow-hidden shadow-md bg-black/20">
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="w-full flex items-center gap-3 px-4 py-3 bg-midnight-base hover:bg-midnight-border/40 transition-colors text-left border-b border-midnight-border"
+        className="w-full flex items-center gap-3 px-5 py-4 hover:bg-white/5 transition-colors text-left border-b border-white/5"
       >
-        <FileCode className="w-4 h-4 text-amber-primary flex-shrink-0" />
+        <FileCode className="w-4 h-4 text-amber-500 flex-shrink-0" />
         <code className="text-sm text-gray-300 font-mono flex-1 truncate">{file.filename}</code>
         <div className="flex items-center gap-2 flex-shrink-0">
           {file.issues.filter((i) => i.severity === "bug").length > 0 && (
@@ -84,7 +84,7 @@ function FileBlock({ file }: { file: ParsedFile }) {
       </button>
 
       {!collapsed && (
-        <div className="divide-y divide-midnight-border">
+        <div className="divide-y divide-white/5">
           {file.issues.map((issue, idx) => {
             const style = severityStyles[issue.severity];
             return (
@@ -118,21 +118,21 @@ export default function DiffViewer({ issues }: DiffViewerProps) {
 
   if (files.length === 0) {
     return (
-      <div className="bg-midnight-card border border-midnight-border rounded-2xl p-8 text-center animate-fade-in shadow-sm">
-        <div className="text-3xl mb-3">✨</div>
-        <h3 className="text-base font-semibold text-gray-100 mb-2">Clean code!</h3>
+      <div className="w-full p-8 text-center animate-fade-in">
+        <div className="text-4xl mb-4">✨</div>
+        <h3 className="text-lg font-bold text-white mb-2">Clean code!</h3>
         <p className="text-gray-400 text-sm">No file-specific issues detected.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-midnight-card border border-midnight-border rounded-2xl p-6 animate-fade-in shadow-sm">
-      <div className="flex items-center justify-between mb-5">
-        <h3 className="text-base font-semibold text-gray-100">
+    <div className="w-full animate-fade-in p-2 sm:p-4">
+      <div className="flex items-center justify-between mb-6 px-1">
+        <h3 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
           Annotated Files
-          <span className="ml-1.5 text-sm text-gray-500 font-normal">
-            ({files.length} file{files.length !== 1 ? "s" : ""} with issues)
+          <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-xs text-gray-300 font-medium">
+            {files.length} file{files.length !== 1 ? "s" : ""}
           </span>
         </h3>
       </div>

@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   ArrowRight,
   Clock,
+  Zap,
 } from "lucide-react";
 import LandingInput from "@/components/LandingInput";
 import LoadingSteps from "@/components/LoadingSteps";
@@ -44,12 +45,13 @@ function HistoryStrip({ onSelect }: { onSelect: (result: AnalysisResult) => void
   if (history.length === 0) return null;
 
   return (
-    <div className="mt-4 flex items-center gap-3 overflow-x-auto pb-1">
-      <div className="flex items-center gap-1 flex-shrink-0">
-        <Clock className="w-3.5 h-3.5 text-gray-500" />
-        <span className="text-xs text-gray-500 font-medium">Recent</span>
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-2">
+        <Clock className="w-4 h-4 text-gray-500" />
+        <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Recent Analyses</span>
       </div>
-      {history.slice(0, 5).map((entry) => {
+      <div className="flex flex-wrap gap-2">
+      {history.slice(0, 3).map((entry) => {
         const score = entry.result.health_score;
         const scoreColor =
           score >= 71 ? "text-teal-success" : score >= 41 ? "text-amber-primary" : "text-red-400";
@@ -57,134 +59,13 @@ function HistoryStrip({ onSelect }: { onSelect: (result: AnalysisResult) => void
           <button
             key={entry.id}
             onClick={() => onSelect(entry.result)}
-            className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full text-xs border border-midnight-border bg-midnight-card text-gray-400 hover:border-amber-primary hover:text-amber-primary transition-all shadow-sm"
+            className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full text-xs border border-white/5 bg-white/5 text-gray-300 hover:border-amber-primary/50 hover:bg-amber-900/10 transition-all shadow-sm"
           >
-            <span className="max-w-[140px] truncate">{entry.result.pr_title}</span>
+            <span className="max-w-[120px] truncate">{entry.result.pr_title}</span>
             <span className={`font-bold ${scoreColor}`}>{score}</span>
           </button>
         );
       })}
-    </div>
-  );
-}
-
-// ─── Mock preview card ────────────────────────────────────────────────────────
-function MockPreview() {
-  const focusInput = () => {
-    const input = document.querySelector("input[type='url']") as HTMLInputElement | null;
-    if (input) {
-      input.scrollIntoView({ behavior: "smooth", block: "center" });
-      setTimeout(() => input.focus(), 300);
-    }
-  };
-
-  return (
-    <div className="relative mt-10 rounded-2xl overflow-hidden">
-      {/* Blurred mock */}
-      <div
-        className="pointer-events-none select-none"
-        style={{ filter: "blur(3px)", opacity: 0.48 }}
-        aria-hidden="true"
-      >
-        <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-4 mb-4">
-          <div className="bg-midnight-card border border-midnight-border rounded-2xl p-6 flex justify-center items-center">
-            <div className="flex flex-col items-center gap-2">
-              <div
-                className="w-24 h-24 rounded-full flex items-center justify-center"
-                style={{ border: "8px solid #06D6A0", boxShadow: "0 0 20px rgba(6,214,160,0.2)" }}
-              >
-                <span className="text-2xl font-bold text-teal-success">84</span>
-              </div>
-              <span className="text-xs text-gray-500 font-medium">Health Score</span>
-            </div>
-          </div>
-          <div className="bg-midnight-card border border-midnight-border rounded-2xl p-6">
-            <h3 className="text-base font-bold text-gray-100 mb-1 truncate">
-              feat: add concurrent rendering for async state updates
-            </h3>
-            <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
-              <span>sophiebits</span>
-              <span>·</span>
-              <span>facebook/react</span>
-              <span>·</span>
-              <span>#31901</span>
-            </div>
-            <p className="text-gray-400 text-sm mb-3 line-clamp-2">
-              Well-structured PR improving render performance. The concurrent approach is sound,
-              though a few edge cases around error boundaries need attention.
-            </p>
-            <div className="flex gap-2">
-              <span className="px-2.5 py-1 bg-red-900/30 border border-red-800/50 rounded-lg text-xs text-red-400 font-medium">
-                1 bug
-              </span>
-              <span className="px-2.5 py-1 bg-amber-900/30 border border-amber-800/50 rounded-lg text-xs text-amber-400 font-medium">
-                3 warnings
-              </span>
-              <span className="px-2.5 py-1 bg-green-900/30 border border-green-800/50 rounded-lg text-xs text-green-400 font-medium">
-                4 suggestions
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-midnight-card border border-midnight-border rounded-2xl p-4 space-y-3">
-          {[
-            {
-              type: "bug" as const,
-              file: "src/react-reconciler/ReactFiber.ts",
-              text: "Race condition in useTransition when two concurrent renders access shared state simultaneously",
-            },
-            {
-              type: "warning" as const,
-              file: "src/hooks/useEffect.ts",
-              text: "Missing cleanup function for AbortController — may cause memory leaks on unmount",
-            },
-            {
-              type: "suggestion" as const,
-              file: "src/scheduler/Scheduler.ts",
-              text: "Consider memoizing the selector with useMemo to avoid unnecessary re-renders in hot paths",
-            },
-          ].map((issue, i) => (
-            <div
-              key={i}
-              className={`pl-4 border-l-4 rounded-r-xl p-3 ${
-                issue.type === "bug"
-                  ? "border-l-red-400 bg-red-900/20"
-                  : issue.type === "warning"
-                  ? "border-l-amber-400 bg-amber-900/20"
-                  : "border-l-green-400 bg-green-900/20"
-              }`}
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <span
-                  className={`text-xs font-bold uppercase ${
-                    issue.type === "bug"
-                      ? "text-red-400"
-                      : issue.type === "warning"
-                      ? "text-amber-400"
-                      : "text-green-400"
-                  }`}
-                >
-                  {issue.type}
-                </span>
-                <code className="text-xs text-gray-500 font-mono truncate">{issue.file}</code>
-              </div>
-              <p className="text-sm text-gray-300">{issue.text}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* CTA overlay */}
-      <div className="absolute inset-0 flex flex-col items-center justify-end pb-12 bg-gradient-to-t from-[#0F111A] via-[#0F111A]/75 to-transparent">
-        <p className="text-sm text-gray-500 mb-3">Your results will appear here</p>
-        <button
-          onClick={focusInput}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-primary text-midnight-base font-semibold text-sm hover:bg-amber-hover transition-all shadow-lg active:scale-95"
-        >
-          Analyze your first PR
-          <ArrowRight className="w-4 h-4" />
-        </button>
       </div>
     </div>
   );
@@ -287,67 +168,103 @@ export default function HomePage() {
   const hasResult = result !== null;
 
   return (
-    <div className="min-h-screen bg-midnight-base flex flex-col">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-midnight-card/80 backdrop-blur-md border-b border-midnight-border/80">
-        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-lg bg-amber-primary flex items-center justify-center shadow-sm">
-              <span className="text-midnight-base text-xs font-bold leading-none">PR</span>
+    <div className="min-h-screen bg-midnight-base flex flex-col relative overflow-hidden font-sans">
+      {/* Ambient Glassmorphic Background Glows */}
+      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-amber-500/10 rounded-full blur-[140px] pointer-events-none -translate-y-1/3 translate-x-1/3" />
+      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-teal-500/5 rounded-full blur-[140px] pointer-events-none translate-y-1/3 -translate-x-1/3" />
+
+      {/* Floating Pill Header */}
+      <div className="w-full pt-6 px-6 relative z-40">
+        <header className="max-w-5xl mx-auto rounded-full bg-midnight-card/40 backdrop-blur-xl border border-white/5 px-6 py-3 flex items-center justify-between shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+          <div className="flex items-center gap-3 group cursor-pointer">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-600 p-[1px] shadow-lg shadow-amber-500/20 group-hover:shadow-amber-500/40 transition-shadow">
+              <div className="w-full h-full bg-midnight-base/90 rounded-[10px] flex items-center justify-center">
+                <span className="text-transparent bg-clip-text bg-gradient-to-br from-amber-300 to-orange-500 text-[11px] font-black tracking-widest">PR</span>
+              </div>
             </div>
-            <span className="text-sm font-semibold text-gray-100 tracking-tight">PR Reviewer</span>
+            <span className="text-sm font-bold text-white tracking-widest uppercase">PR Reviewer</span>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-midnight-base border border-midnight-border">
-              <div className="w-2 h-2 rounded-full bg-amber-primary pulse-dot" />
-              <span className="text-xs text-gray-400">Qwen2.5-Coder-32B</span>
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/5">
+              <div className="w-2 h-2 rounded-full bg-amber-400 pulse-dot" />
+              <span className="text-xs text-gray-300 font-medium">Qwen2.5-Coder</span>
             </div>
             <a
               href="https://github.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-500 hover:text-gray-200 transition-colors"
+              className="text-gray-400 hover:text-white transition-colors"
             >
               <Github className="w-5 h-5" />
             </a>
           </div>
-        </div>
-      </header>
+        </header>
+      </div>
 
-      {/* Main */}
-      <main className="flex-1 max-w-3xl mx-auto w-full px-6 py-12">
-        {/* Landing state */}
+      {/* Main Content */}
+      <main className="flex-1 w-full max-w-6xl mx-auto px-6 py-12 lg:py-24 relative z-10 flex flex-col justify-center">
+        
+        {/* LANDING STATE - Split Layout */}
         {!hasResult && !isLoading && (
-          <div className="animate-fade-in">
-            <div className="text-center mb-10">
-              <h1 className="text-4xl sm:text-5xl font-bold text-gray-100 mb-4 leading-tight tracking-tight">
+          <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center animate-fade-in">
+            {/* Left Column: Typography */}
+            <div className="text-left space-y-8">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md shadow-xl">
+                <div className="w-2 h-2 rounded-full bg-amber-400 pulse-dot" />
+                <span className="text-xs font-semibold text-amber-200 uppercase tracking-widest">AI-Powered Code Review</span>
+              </div>
+              <h1 className="text-5xl sm:text-[5.5rem] font-black text-white leading-[1.05] tracking-tighter">
                 Your senior engineer
                 <br />
-                is busy.{" "}
-                <span className="gradient-text">We&apos;re not.</span>
+                <span className="text-gray-500">is busy.</span>
+                <br />
+                <span className="relative inline-block mt-2">
+                  <span className="absolute inset-x-0 bottom-0 h-1/2 bg-amber-500/20 blur-2xl rounded-full" />
+                  <span className="relative bg-gradient-to-br from-amber-200 via-amber-400 to-orange-500 bg-clip-text text-transparent">
+                    We&apos;re not.
+                  </span>
+                </span>
               </h1>
-              <p className="text-gray-400 text-lg max-w-lg mx-auto leading-relaxed">
-                Paste any GitHub PR URL and get thorough code review before your reviewer
-                even opens the tab.
+              <p className="text-gray-400 text-lg sm:text-xl max-w-lg leading-relaxed font-medium">
+                Paste any GitHub PR URL and get a thorough code review, bug detection, and performance analysis instantly.
               </p>
+              
+              <div className="pt-2 flex items-center gap-6 text-sm font-medium text-gray-500">
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-teal-success" /> Secure & Private
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-teal-success" /> Sub-30s Analysis
+                </div>
+              </div>
             </div>
 
-            <LandingInput
-              onAnalyze={handleAnalyze}
-              isLoading={isLoading}
-              hasResult={hasResult}
-              onHarsher={handleHarsher}
-              hasUsedStrictMode={hasUsedStrictMode}
-            />
-
-            <HistoryStrip onSelect={handleSelectHistory} />
-            <MockPreview />
+            {/* Right Column: Terminal/Input Card */}
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/20 to-transparent rounded-3xl blur-2xl" />
+              <div className="relative bg-midnight-card/60 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-[0_16px_64px_rgba(0,0,0,0.5)]">
+                <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-amber-400" /> Start Analysis
+                </h3>
+                <LandingInput
+                  onAnalyze={handleAnalyze}
+                  isLoading={isLoading}
+                  hasResult={hasResult}
+                  onHarsher={handleHarsher}
+                  hasUsedStrictMode={hasUsedStrictMode}
+                />
+                
+                <div className="mt-8 border-t border-white/5 pt-6">
+                  <HistoryStrip onSelect={handleSelectHistory} />
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Compact input when loading or showing result */}
+        {/* Compact input top bar when loading or showing result */}
         {(hasResult || isLoading) && (
-          <div className="mb-8">
+          <div className="mb-10 max-w-3xl mx-auto w-full animate-fade-in relative z-20">
             <LandingInput
               onAnalyze={handleAnalyze}
               isLoading={isLoading}
@@ -358,91 +275,106 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Large PR warning */}
-        {showLargePRWarning && (
-          <div className="mb-6 bg-amber-900/20 border border-amber-800/50 rounded-xl animate-fade-in overflow-hidden">
-            <div className="flex items-center gap-3 px-4 py-3">
-              <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" />
-              <p className="text-sm text-amber-300">
-                Large PR ({result?.total_changed_lines}+ lines). Consider splitting for easier review.
-              </p>
-              <button
-                onClick={() => setShowSplitTips((v) => !v)}
-                className="ml-auto text-xs font-medium text-amber-400 hover:text-amber-300 underline flex-shrink-0 whitespace-nowrap"
-              >
-                {showSplitTips ? "Hide tips" : "How to split?"}
-              </button>
-              <button
-                onClick={() => setShowLargePRWarning(false)}
-                className="text-amber-500 hover:text-amber-300 flex-shrink-0"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            {showSplitTips && (
-              <div className="px-4 pb-4 border-t border-amber-800/50 pt-3">
-                <p className="text-xs font-semibold text-amber-400 mb-2 uppercase tracking-wide">
-                  Ways to split a large PR
+        {/* System Messages (Warnings/Errors) */}
+        <div className="max-w-5xl mx-auto w-full">
+          {showLargePRWarning && (
+            <div className="mb-6 bg-amber-900/40 border border-amber-500/30 rounded-2xl animate-fade-in overflow-hidden backdrop-blur-md">
+              <div className="flex items-center gap-3 px-5 py-4">
+                <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0" />
+                <p className="text-sm font-medium text-amber-100">
+                  Large PR ({result?.total_changed_lines}+ lines). Consider splitting for easier review.
                 </p>
-                <ul className="space-y-2 text-sm text-amber-300/80">
-                  {[
-                    ["Refactor first, feature second", "One PR restructures (no behavior change), a second adds the feature on top."],
-                    ["Split by layer", "Backend (DB, API) in one PR, frontend in another."],
-                    ["Tests separate from implementation", "Merge implementation first, follow up with tests."],
-                    ["Stacked PRs", "PR #1 is base, PR #2 targets PR #1. Use Graphite or ghstack to automate."],
-                    ["Feature flags", "Merge incomplete code behind a disabled flag — each PR lands safely alone."],
-                  ].map(([title, desc], i) => (
-                    <li key={i} className="flex gap-2">
-                      <span className="text-amber-400 flex-shrink-0 font-medium">{i + 1}.</span>
-                      <span>
-                        <strong className="text-amber-300">{title}</strong> — {desc}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+                <button
+                  onClick={() => setShowSplitTips((v) => !v)}
+                  className="ml-auto text-xs font-bold text-amber-400 hover:text-amber-200 uppercase tracking-wider flex-shrink-0"
+                >
+                  {showSplitTips ? "Hide tips" : "How to split?"}
+                </button>
+                <button
+                  onClick={() => setShowLargePRWarning(false)}
+                  className="text-amber-500 hover:text-amber-300 flex-shrink-0 ml-2"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-            )}
-          </div>
-        )}
+              {showSplitTips && (
+                <div className="px-5 pb-5 border-t border-amber-800/50 pt-4 bg-black/20">
+                  <ul className="space-y-3 text-sm text-amber-200/80">
+                    {[
+                      ["Refactor first, feature second", "One PR restructures, a second adds the feature on top."],
+                      ["Split by layer", "Backend (DB, API) in one PR, frontend in another."],
+                      ["Tests separate", "Merge implementation first, follow up with tests."],
+                      ["Stacked PRs", "Target dependent PRs sequentially. Use Graphite or ghstack."],
+                    ].map(([title, desc], i) => (
+                      <li key={i} className="flex gap-3">
+                        <span className="text-amber-500 flex-shrink-0 font-bold">{i + 1}.</span>
+                        <span><strong className="text-amber-300">{title}</strong> — {desc}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
 
-        {/* Error */}
-        {error && !isLoading && (
-          <div className="mb-6 p-4 bg-red-900/20 border border-red-800/50 rounded-xl animate-fade-in">
-            <div className="flex items-start gap-3">
-              <X className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-sm font-semibold text-red-400 mb-1">Analysis failed</p>
-                <p className="text-sm text-red-400/80">{error}</p>
+          {error && !isLoading && (
+            <div className="mb-6 p-5 bg-red-900/40 border border-red-500/30 rounded-2xl animate-fade-in backdrop-blur-md">
+              <div className="flex items-start gap-4">
+                <X className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-bold text-red-200 mb-1">Analysis failed</p>
+                  <p className="text-sm text-red-200/70">{error}</p>
+                </div>
               </div>
             </div>
+          )}
+        </div>
+
+        {/* Loading State */}
+        {isLoading && (
+          <div className="max-w-2xl mx-auto w-full bg-midnight-card/40 backdrop-blur-2xl border border-white/5 rounded-3xl p-10 shadow-2xl">
+            <LoadingSteps currentStep={loadingStep} />
           </div>
         )}
 
-        {/* Loading */}
-        {isLoading && <LoadingSteps currentStep={loadingStep} />}
-
-        {/* Results */}
+        {/* RESULTS - Bento Box Layout */}
         {hasResult && result && !isLoading && (
-          <div className="space-y-5 animate-slide-up">
-            <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-5 items-start">
-              <div className="bg-midnight-card border border-midnight-border rounded-2xl p-6 flex justify-center shadow-sm">
+          <div className="space-y-6 animate-slide-up max-w-5xl mx-auto w-full relative z-10">
+            {/* Top row: Health & Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              
+              {/* Health Score Bento */}
+              <div className="bg-midnight-card/60 backdrop-blur-2xl border border-white/5 rounded-3xl p-8 flex flex-col items-center justify-center shadow-xl">
+                <h3 className="text-xs font-bold text-gray-400 tracking-widest uppercase mb-6 w-full text-center">System Health</h3>
                 <HealthScore score={result.health_score} />
               </div>
-              <SummaryCard result={result} />
+
+              {/* Summary Bento */}
+              <div className="md:col-span-2 bg-midnight-card/60 backdrop-blur-2xl border border-white/5 rounded-3xl shadow-xl flex flex-col overflow-hidden">
+                <SummaryCard result={result} />
+              </div>
             </div>
 
-            <IssuesPanel issues={result.issues} />
+            {/* Middle row: Issues */}
+            <div className="bg-midnight-card/60 backdrop-blur-2xl border border-white/5 rounded-3xl p-2 sm:p-4 shadow-xl">
+               <IssuesPanel issues={result.issues} />
+            </div>
 
-            {result.issues.length > 0 && <DiffViewer issues={result.issues} />}
-
-            <div className="flex justify-center pt-2 pb-6">
+            {/* Bottom row: DiffViewer */}
+            {result.issues.length > 0 && (
+               <div className="bg-midnight-card/60 backdrop-blur-2xl border border-white/5 rounded-3xl shadow-xl p-2 sm:p-4">
+                  <DiffViewer issues={result.issues} />
+               </div>
+            )}
+            
+            <div className="flex justify-center pt-8 pb-12">
               <button
                 onClick={handlePostComment}
                 disabled={isPostingComment}
-                className="flex items-center gap-2.5 px-6 py-3 rounded-xl font-semibold text-sm border border-midnight-border bg-midnight-card text-gray-300 hover:bg-midnight-border/40 hover:border-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                className="flex items-center gap-3 px-8 py-4 rounded-full font-bold text-sm bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xl hover:shadow-2xl active:scale-95"
               >
-                <MessageSquare className="w-4 h-4" />
-                {isPostingComment ? "Posting…" : "Post review to GitHub"}
+                <Github className="w-5 h-5" />
+                {isPostingComment ? "Posting to GitHub…" : "Post review to GitHub"}
               </button>
             </div>
           </div>
@@ -454,23 +386,23 @@ export default function HomePage() {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg max-w-sm toast-enter ${
+            className={`flex items-center gap-3 px-5 py-4 rounded-2xl border shadow-2xl max-w-sm toast-enter backdrop-blur-md ${
               toast.type === "success"
-                ? "bg-midnight-card border-teal-success/40 text-teal-success"
+                ? "bg-teal-900/40 border-teal-500/30 text-teal-100"
                 : toast.type === "error"
-                ? "bg-midnight-card border-red-500/40 text-red-400"
-                : "bg-midnight-card border-midnight-border text-gray-300"
+                ? "bg-red-900/40 border-red-500/30 text-red-100"
+                : "bg-midnight-card/80 border-white/10 text-gray-200"
             }`}
           >
-            {toast.type === "success" && <Check className="w-4 h-4 text-teal-success flex-shrink-0" />}
-            {toast.type === "error" && <X className="w-4 h-4 text-red-400 flex-shrink-0" />}
-            <p className="text-sm flex-1">{toast.message}</p>
+            {toast.type === "success" && <Check className="w-5 h-5 text-teal-400 flex-shrink-0" />}
+            {toast.type === "error" && <X className="w-5 h-5 text-red-400 flex-shrink-0" />}
+            <p className="text-sm font-medium flex-1">{toast.message}</p>
             {toast.link && (
               <a
                 href={toast.link.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs font-medium underline opacity-70 hover:opacity-100 flex-shrink-0"
+                className="flex items-center gap-1 text-xs font-bold underline opacity-70 hover:opacity-100 flex-shrink-0"
               >
                 {toast.link.label}
                 <ExternalLink className="w-3 h-3" />
@@ -482,14 +414,6 @@ export default function HomePage() {
           </div>
         ))}
       </div>
-
-      {/* Footer */}
-      <footer className="border-t border-midnight-border/80 py-5 mt-auto">
-        <div className="max-w-3xl mx-auto px-6 flex items-center justify-between text-xs text-gray-500">
-          <span>PR Reviewer</span>
-          <span>Next.js + FastAPI</span>
-        </div>
-      </footer>
     </div>
   );
 }

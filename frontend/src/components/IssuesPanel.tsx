@@ -13,25 +13,25 @@ const severityConfig = {
     label: "Bug",
     icon: AlertCircle,
     textColor: "text-red-400",
-    leftBorder: "border-l-red-400",
-    bgColor: "bg-red-900/20",
-    filterActive: "bg-red-900/40 text-red-400 border-red-700/50",
+    leftBorder: "border-l-red-500",
+    bgColor: "bg-red-500/5",
+    filterActive: "bg-red-500/20 text-red-300 border-red-500/30",
   },
   warning: {
     label: "Warning",
     icon: AlertTriangle,
     textColor: "text-amber-400",
-    leftBorder: "border-l-amber-400",
-    bgColor: "bg-amber-900/20",
-    filterActive: "bg-amber-900/40 text-amber-400 border-amber-700/50",
+    leftBorder: "border-l-amber-500",
+    bgColor: "bg-amber-500/5",
+    filterActive: "bg-amber-500/20 text-amber-300 border-amber-500/30",
   },
   suggestion: {
     label: "Suggestion",
     icon: Lightbulb,
-    textColor: "text-green-400",
-    leftBorder: "border-l-green-400",
-    bgColor: "bg-green-900/20",
-    filterActive: "bg-green-900/40 text-green-400 border-green-700/50",
+    textColor: "text-teal-400",
+    leftBorder: "border-l-teal-500",
+    bgColor: "bg-teal-500/5",
+    filterActive: "bg-teal-500/20 text-teal-300 border-teal-500/30",
   },
 };
 
@@ -140,11 +140,11 @@ export default function IssuesPanel({ issues }: IssuesPanelProps) {
   }
 
   return (
-    <div className="bg-midnight-card border border-midnight-border rounded-2xl p-6 animate-fade-in shadow-sm">
-      <div className="flex items-center justify-between mb-5">
-        <h3 className="text-base font-semibold text-gray-100">
+    <div className="w-full animate-fade-in p-2 sm:p-4">
+      <div className="flex items-center justify-between mb-6 px-1">
+        <h3 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
           Issues
-          <span className="ml-1.5 text-sm text-gray-400 font-normal">({issues.length})</span>
+          <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-xs text-gray-300 font-medium">({issues.length})</span>
         </h3>
       </div>
 
@@ -154,23 +154,23 @@ export default function IssuesPanel({ issues }: IssuesPanelProps) {
           <button
             key={btn.key}
             onClick={() => setFilter(btn.key)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all shadow-sm ${
               filter === btn.key
                 ? btn.key === "bug"
-                  ? "bg-red-100 text-red-700 border-red-300"
+                  ? "bg-red-500/20 text-red-300 border-red-500/30"
                   : btn.key === "warning"
-                  ? "bg-amber-100 text-amber-700 border-amber-300"
+                  ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
                   : btn.key === "suggestion"
-                  ? "bg-green-100 text-green-700 border-green-300"
-                  : "bg-amber-primary/20 text-amber-primary border-amber-primary/40"
-                : "bg-midnight-base text-gray-500 border-midnight-border hover:border-gray-500 hover:text-gray-300"
+                  ? "bg-teal-500/20 text-teal-300 border-teal-500/30"
+                  : "bg-white/10 text-white border-white/20"
+                : "bg-black/20 text-gray-400 border-white/5 hover:border-white/10 hover:text-gray-200 hover:bg-black/40"
             }`}
           >
             {btn.label}
             {btn.count > 0 && (
               <span
-                className={`ml-1.5 px-1.5 py-0.5 rounded-full text-xs ${
-                  filter === btn.key ? "bg-black/20" : "bg-midnight-border text-gray-400"
+                className={`ml-2 px-1.5 py-0.5 rounded text-[10px] ${
+                  filter === btn.key ? "bg-black/40 text-current" : "bg-white/5 text-gray-400"
                 }`}
               >
                 {btn.count}

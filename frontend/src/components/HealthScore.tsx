@@ -24,15 +24,15 @@ export default function HealthScore({ score }: HealthScoreProps) {
   let glowColor: string;
   if (clampedScore >= 71) {
     color = "#06D6A0";
-    glowColor = "rgba(6,214,160,0.18)";
+    glowColor = "rgba(6,214,160,0.25)";
     label = "Healthy";
   } else if (clampedScore >= 41) {
-    color = "#d97706";
-    glowColor = "rgba(217,119,6,0.18)";
+    color = "#FFC300";
+    glowColor = "rgba(255,195,0,0.25)";
     label = "Needs Attention";
   } else {
-    color = "#dc2626";
-    glowColor = "rgba(220,38,38,0.18)";
+    color = "#EF4444";
+    glowColor = "rgba(239,68,68,0.25)";
     label = "Critical Issues";
   }
 
@@ -44,7 +44,7 @@ export default function HealthScore({ score }: HealthScoreProps) {
           style={{ background: animated ? glowColor : "transparent" }}
         />
         <svg width="140" height="140" viewBox="0 0 140 140" className="relative z-10 -rotate-90">
-          <circle cx="70" cy="70" r={radius} fill="none" stroke="#262A3D" strokeWidth="10" />
+          <circle cx="70" cy="70" r={radius} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="10" />
           <circle
             cx="70"
             cy="70"
