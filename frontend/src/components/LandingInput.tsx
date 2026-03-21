@@ -61,6 +61,27 @@ export default function LandingInput({
         </div>
       )}
 
+      {/* Sample PR suggestions */}
+      {!hasResult && !isLoading && (
+        <div className="mb-3 flex flex-wrap gap-2">
+          {[
+            { label: "vscode", url: "https://github.com/microsoft/vscode/pull/243992" },
+            { label: "next.js", url: "https://github.com/vercel/next.js/pull/75453" },
+            { label: "fastapi", url: "https://github.com/tiangolo/fastapi/pull/13015" },
+            { label: "supabase", url: "https://github.com/supabase/supabase/pull/32015" },
+          ].map((s) => (
+            <button
+              key={s.url}
+              type="button"
+              onClick={() => setUrl(s.url)}
+              className="px-3 py-1 rounded-lg text-xs text-gray-400 bg-gray-900 border border-gray-800 hover:border-gray-600 hover:text-gray-200 transition-all"
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Main input form */}
       <form onSubmit={handleSubmit} className="relative">
         <div className="relative flex items-center gap-3">
