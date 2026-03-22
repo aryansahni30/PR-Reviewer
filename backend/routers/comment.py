@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
-from services.github import parse_pr_url, post_pr_comment
+from services.github import parse_pr_url, post_pr_comment, post_pr_review_comment
 
 router = APIRouter()
 
@@ -119,4 +119,50 @@ async def post_comment(request: CommentRequest):
         success=True,
         comment_url=comment_url,
         message="Comment posted successfully!",
+    )
+
+
+class InlineCommentRequest(BaseModel):
+    url: str
+    file: str
+    line: int
+    body: str
+    commit_id: str
+    github_token: Optional[str] = None
+
+
+@router.post("/post-inline-comment", response_model=CommentResponse)
+async def post_inline_comment(request: InlineCommentRequest):
+    """Post an inline review comment on a specific file/line in a PR."""
+    try:
+        owner, repo, pull_number = parse_pr_url(request.url)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    # Format the comment body with AI badge
+    severity_emoji = "🤖"
+    body = f"{severity_emoji} **AI Review Comment**\n\n{request.body}\n\n---\n*Posted by [PR Code Reviewer](https://github.com) — AI-powered code review*"
+
+    try:
+        result = await post_pr_review_comment(
+            owner=owner,
+            repo=repo,
+            pull_number=pull_number,
+            body=body,
+            path=request.file,
+            line=request.line,
+            commit_id=request.commit_id,
+            token=request.github_token,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"GitHub API error: {str(e)}")
+
+    comment_url = result.get("html_url", request.url)
+
+    return CommentResponse(
+        success=True,
+        comment_url=comment_url,
+        message="Inline comment posted successfully!",
     )

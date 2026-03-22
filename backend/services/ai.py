@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
 DEFAULT_MODEL = "deepseek-ai/deepseek-v3.2"
-FALLBACK_MODEL = "qwen/qwen2.5-coder-32b-instruct"
+FALLBACK_MODEL = "qwen/qwen3.5-122b-a10b"
 _RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 529}
 
 RESPONSE_SCHEMA = """
@@ -51,7 +51,24 @@ def build_system_prompt(language: str, strict_mode: bool) -> str:
     return base
 
 
-def build_user_prompt(diff: str, pr_title: str, pr_description: str) -> str:
+def build_user_prompt(
+    diff: str,
+    pr_title: str,
+    pr_description: str,
+    file_contexts: dict[str, str] | None = None,
+) -> str:
+    # Build the file-context section if we have full file contents
+    context_section = ""
+    if file_contexts:
+        context_parts = []
+        for filepath, content in file_contexts.items():
+            context_parts.append(f"--- {filepath} ---\n{content}")
+        context_section = (
+            "\n\n=== Full source of changed files (use this for context) ===\n"
+            + "\n\n".join(context_parts)
+            + "\n=== End of file context ==="
+        )
+
     return f"""Review the following GitHub Pull Request diff and return a JSON analysis.
 
 PR Title: {pr_title}
@@ -67,6 +84,9 @@ Rules:
 - "line" should be the approximate line number in the file where the issue occurs (use 0 if unknown)
 - Include at least the most important issues; be thorough but not redundant
 - The "language" field should be the primary language detected in the diff
+- For Markdown (.md) or documentation files, ONLY flag critical issues (e.g., completely broken formatting). Do NOT flag minor typos, broken reference examples, or stylistic choices. Severity of documentation issues should rarely be "bug".
+- You are provided the full source of each changed file below. Use it to verify whether variables, functions, and imports exist before flagging them as undefined.
+{context_section}
 
 Diff to review:
 ```
@@ -80,7 +100,8 @@ def extract_json_from_response(text: str) -> dict:
     """Extract and parse JSON from the model's response text.
 
     DeepSeek v3.2 wraps output in markdown fences despite instructions.
-    Three-stage extraction with greedy matching to handle nested objects.
+    Four-stage extraction with greedy matching to handle nested objects
+    and a final truncation-repair pass for cut-off responses.
     """
     text = text.strip()
 
@@ -106,7 +127,54 @@ def extract_json_from_response(text: str) -> dict:
         except json.JSONDecodeError:
             pass
 
+    # Stage 4: truncation repair — response was cut off mid-JSON
+    # Find the start of JSON and try to close all open brackets
+    json_start = text.find("{")
+    if json_start != -1:
+        fragment = text[json_start:]
+        repaired = _try_repair_truncated_json(fragment)
+        if repaired is not None:
+            return repaired
+
     raise ValueError(f"Could not extract valid JSON from model response: {text[:500]}")
+
+
+def _try_repair_truncated_json(fragment: str) -> dict | None:
+    """Attempt to repair truncated JSON by closing open structures.
+
+    Strategy: strip the last incomplete value/key, then close all
+    open brackets and braces.
+    """
+    # Remove any trailing incomplete string (cut mid-word)
+    # Look for the last complete key-value or array element
+    # Try progressively shorter prefixes to find a repairable point
+    for trim in range(min(200, len(fragment)), 0, -1):
+        candidate = fragment[: len(fragment) - trim]
+
+        # Strip trailing partial tokens: commas, colons, partial strings
+        candidate = candidate.rstrip()
+        while candidate and candidate[-1] in (',', ':', '"', "'"):
+            candidate = candidate[:-1].rstrip()
+
+        # Count open vs close brackets
+        open_braces = candidate.count("{") - candidate.count("}")
+        open_brackets = candidate.count("[") - candidate.count("]")
+
+        if open_braces < 0 or open_brackets < 0:
+            continue
+
+        # Close everything
+        candidate += "]" * open_brackets + "}" * open_braces
+
+        try:
+            data = json.loads(candidate)
+            if isinstance(data, dict) and "summary" in data:
+                logger.warning("Repaired truncated JSON (trimmed %d chars)", trim)
+                return data
+        except json.JSONDecodeError:
+            continue
+
+    return None
 
 
 async def _call_with_fallback(
@@ -133,7 +201,7 @@ async def _call_with_fallback(
                 )
                 if current_model != model:
                     logger.warning("Used fallback model '%s' (primary '%s' was down)", current_model, model)
-                return response
+                return response, current_model
             except NotFoundError as e:
                 last_error = e
                 wait = 2 ** (attempt + 1)
@@ -169,6 +237,7 @@ async def analyze_pr_diff(
     language: str,
     strict_mode: bool = False,
     model: str = DEFAULT_MODEL,
+    file_contexts: dict[str, str] | None = None,
 ) -> dict:
     """Call NVIDIA API to analyze a PR diff and return structured feedback.
 
@@ -188,13 +257,13 @@ async def analyze_pr_diff(
     )
 
     system_prompt = build_system_prompt(language, strict_mode)
-    user_content = build_user_prompt(diff, pr_title, pr_description)
+    user_content = build_user_prompt(diff, pr_title, pr_description, file_contexts)
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_content},
     ]
 
-    response = await _call_with_fallback(client, model, messages)
+    response, used_model = await _call_with_fallback(client, model, messages)
 
     response_text = response.choices[0].message.content or ""
 
@@ -203,6 +272,7 @@ async def analyze_pr_diff(
 
     result = extract_json_from_response(response_text)
     result = normalize_ai_response(result, language)
+    result["model_used"] = used_model
     return result
 
 

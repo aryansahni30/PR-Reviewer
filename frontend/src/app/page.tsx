@@ -16,8 +16,7 @@ import LandingInput from "@/components/LandingInput";
 import LoadingSteps from "@/components/LoadingSteps";
 import HealthScore from "@/components/HealthScore";
 import SummaryCard from "@/components/SummaryCard";
-import DiffViewer from "@/components/DiffViewer";
-import IssuesPanel from "@/components/IssuesPanel";
+import InlineDiffReview from "@/components/InlineDiffReview";
 import { saveToHistory } from "@/components/AnalysisHistory";
 import { analyzePR, postComment } from "@/lib/api";
 import { AnalysisResult, HistoryEntry, LoadingStep } from "@/types";
@@ -94,7 +93,7 @@ export default function HomePage() {
   }, []);
 
   const runAnalysis = useCallback(
-    async (prUrl: string, strictMode: boolean) => {
+    async (prUrl: string, strictMode: boolean, selectedModel: string = "deepseek-ai/deepseek-v3.2") => {
       setUrl(prUrl);
       setError(null);
       setResult(null);
@@ -109,7 +108,7 @@ export default function HomePage() {
       setLoadingStep("analyzing");
 
       try {
-        const data = await analyzePR(prUrl, strictMode, "deepseek-ai/deepseek-v3.2");
+        const data = await analyzePR(prUrl, strictMode, selectedModel);
         setLoadingStep("done");
         setResult(data);
         if (data.total_changed_lines > 500) setShowLargePRWarning(true);
@@ -126,16 +125,16 @@ export default function HomePage() {
   );
 
   const handleAnalyze = useCallback(
-    (prUrl: string, strictMode: boolean) => runAnalysis(prUrl, strictMode),
+    (prUrl: string, strictMode: boolean, selectedModel: string) => runAnalysis(prUrl, strictMode, selectedModel),
     [runAnalysis]
   );
 
   const handleHarsher = useCallback(() => {
     if (url) {
       setHasUsedStrictMode(true);
-      runAnalysis(url, true);
+      runAnalysis(url, true, result?.model_used || "deepseek-ai/deepseek-v3.2");
     }
-  }, [url, runAnalysis]);
+  }, [url, result?.model_used, runAnalysis]);
 
   const handlePostComment = useCallback(async () => {
     if (!result) return;
@@ -185,10 +184,6 @@ export default function HomePage() {
             <span className="text-sm font-bold text-white tracking-widest uppercase">PR Reviewer</span>
           </div>
           <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/5">
-              <div className="w-2 h-2 rounded-full bg-amber-400 pulse-dot" />
-              <span className="text-xs text-gray-300 font-medium">Qwen2.5-Coder</span>
-            </div>
             <a
               href="https://github.com"
               target="_blank"
@@ -202,17 +197,13 @@ export default function HomePage() {
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 w-full max-w-6xl mx-auto px-6 py-12 lg:py-24 relative z-10 flex flex-col justify-center">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-12 lg:py-24 relative z-10 flex flex-col justify-center">
         
         {/* LANDING STATE - Split Layout */}
         {!hasResult && !isLoading && (
-          <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center animate-fade-in">
+          <div className="grid lg:grid-cols-[1fr_1.15fr] gap-12 lg:gap-16 items-center animate-fade-in">
             {/* Left Column: Typography */}
             <div className="text-left space-y-8">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md shadow-xl">
-                <div className="w-2 h-2 rounded-full bg-amber-400 pulse-dot" />
-                <span className="text-xs font-semibold text-amber-200 uppercase tracking-widest">AI-Powered Code Review</span>
-              </div>
               <h1 className="text-5xl sm:text-[5.5rem] font-black text-white leading-[1.05] tracking-tighter">
                 Your senior engineer
                 <br />
@@ -226,15 +217,27 @@ export default function HomePage() {
                 </span>
               </h1>
               <p className="text-gray-400 text-lg sm:text-xl max-w-lg leading-relaxed font-medium">
-                Paste any GitHub PR URL and get a thorough code review, bug detection, and performance analysis instantly.
+                Instant code review. No queue. No calendar invite.
               </p>
               
-              <div className="pt-2 flex items-center gap-6 text-sm font-medium text-gray-500">
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-teal-success" /> Secure & Private
+              <div className="pt-6 flex flex-col gap-4 text-sm font-medium text-gray-400">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-teal-500/10 flex items-center justify-center border border-teal-500/20">
+                    <Check className="w-4 h-4 text-teal-400" />
+                  </div>
+                  <span>Deep AST Analysis across 40+ languages</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-teal-success" /> Sub-30s Analysis
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                    <Zap className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <span>Sub-30s inference via Qwen2.5-Coder-32B</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
+                    <Github className="w-4 h-4 text-orange-400" />
+                  </div>
+                  <span>One-click GitHub comment deployment</span>
                 </div>
               </div>
             </div>
@@ -332,42 +335,54 @@ export default function HomePage() {
 
         {/* Loading State */}
         {isLoading && (
-          <div className="max-w-2xl mx-auto w-full bg-midnight-card/40 backdrop-blur-2xl border border-white/5 rounded-3xl p-10 shadow-2xl">
+          <div className="max-w-5xl mx-auto w-full relative z-10 pt-4">
             <LoadingSteps currentStep={loadingStep} />
           </div>
         )}
 
         {/* RESULTS - Bento Box Layout */}
         {hasResult && result && !isLoading && (
-          <div className="space-y-6 animate-slide-up max-w-5xl mx-auto w-full relative z-10">
+          <div className="space-y-6 max-w-5xl mx-auto w-full relative z-10">
             {/* Top row: Health & Summary */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               
               {/* Health Score Bento */}
-              <div className="bg-midnight-card/60 backdrop-blur-2xl border border-white/5 rounded-3xl p-8 flex flex-col items-center justify-center shadow-xl">
+              <div 
+                className="bg-midnight-card/60 backdrop-blur-2xl border border-white/5 rounded-3xl p-8 flex flex-col items-center justify-center shadow-xl animate-slide-up"
+                style={{ animationFillMode: 'both', animationDelay: '0ms' }}
+              >
                 <h3 className="text-xs font-bold text-gray-400 tracking-widest uppercase mb-6 w-full text-center">System Health</h3>
                 <HealthScore score={result.health_score} />
               </div>
 
               {/* Summary Bento */}
-              <div className="md:col-span-2 bg-midnight-card/60 backdrop-blur-2xl border border-white/5 rounded-3xl shadow-xl flex flex-col overflow-hidden">
+              <div 
+                className="md:col-span-2 bg-midnight-card/60 backdrop-blur-2xl border border-white/5 rounded-3xl shadow-xl flex flex-col overflow-hidden animate-slide-up"
+                style={{ animationFillMode: 'both', animationDelay: '100ms' }}
+              >
                 <SummaryCard result={result} />
               </div>
             </div>
 
-            {/* Middle row: Issues */}
-            <div className="bg-midnight-card/60 backdrop-blur-2xl border border-white/5 rounded-3xl p-2 sm:p-4 shadow-xl">
-               <IssuesPanel issues={result.issues} />
-            </div>
-
-            {/* Bottom row: DiffViewer */}
-            {result.issues.length > 0 && (
-               <div className="bg-midnight-card/60 backdrop-blur-2xl border border-white/5 rounded-3xl shadow-xl p-2 sm:p-4">
-                  <DiffViewer issues={result.issues} />
+            {/* Issues + Code Review (unified) */}
+            {result.raw_diff && (
+               <div 
+                 className="bg-midnight-card/60 backdrop-blur-2xl border border-white/5 rounded-3xl shadow-xl p-2 sm:p-4 animate-slide-up"
+                 style={{ animationFillMode: 'both', animationDelay: '200ms' }}
+               >
+                  <InlineDiffReview
+                    rawDiff={result.raw_diff}
+                    issues={result.issues}
+                    prUrl={result.pr_url}
+                    headSha={result.head_sha || ""}
+                  />
                </div>
             )}
             
-            <div className="flex justify-center pt-8 pb-12">
+            <div 
+              className="flex justify-center pt-8 pb-12 animate-slide-up"
+              style={{ animationFillMode: 'both', animationDelay: '400ms' }}
+            >
               <button
                 onClick={handlePostComment}
                 disabled={isPostingComment}

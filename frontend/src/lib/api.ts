@@ -43,3 +43,32 @@ export async function postComment(
 
   return response.json();
 }
+
+export async function postInlineComment(
+  url: string,
+  file: string,
+  line: number,
+  body: string,
+  commitId: string,
+  githubToken?: string
+): Promise<{ success: boolean; comment_url: string; message: string }> {
+  const response = await fetch(`${API_URL}/api/post-inline-comment`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      url,
+      file,
+      line,
+      body,
+      commit_id: commitId,
+      github_token: githubToken || process.env.NEXT_PUBLIC_GITHUB_TOKEN || undefined,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: "Unknown error" }));
+    throw new Error(errorData.detail || `Request failed with status ${response.status}`);
+  }
+
+  return response.json();
+}

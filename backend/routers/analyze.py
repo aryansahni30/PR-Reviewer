@@ -5,6 +5,7 @@ from services.github import (
     parse_pr_url,
     fetch_pr_diff,
     fetch_pr_metadata,
+    fetch_pr_file_contexts,
     filter_changed_lines,
     count_changed_lines,
     detect_language_from_diff,
@@ -17,7 +18,7 @@ router = APIRouter()
 class AnalyzeRequest(BaseModel):
     url: str
     strict_mode: bool = False
-    model: str = "qwen/qwen2.5-coder-32b-instruct"
+    model: str = "qwen/qwen3.5-122b-a10b"
 
 
 class AnalyzeResponse(BaseModel):
@@ -34,6 +35,9 @@ class AnalyzeResponse(BaseModel):
     pr_url: str
     pr_number: int
     repo_name: str
+    model_used: str
+    raw_diff: str = ""
+    head_sha: str = ""
 
 
 @router.post("/analyze", response_model=AnalyzeResponse)
@@ -67,9 +71,22 @@ async def analyze_pr(request: AnalyzeRequest):
     pr_base_branch = metadata.get("base", {}).get("ref", "main")
     pr_head_branch = metadata.get("head", {}).get("ref", "feature")
     pr_description = metadata.get("body", "") or ""
+    head_sha = metadata.get("head", {}).get("sha", "")
 
-    # Truncate diff if too large for model context (~30k chars max)
-    MAX_DIFF_CHARS = 30_000
+    # Fetch full file contents for context
+    file_contexts = {}
+    if head_sha:
+        try:
+            file_contexts = await fetch_pr_file_contexts(
+                owner, repo, diff_raw, head_sha
+            )
+        except Exception:
+            # Non-fatal: continue without file context if fetching fails
+            pass
+
+    # Adjust diff budget based on file context size to stay within model limits
+    context_chars = sum(len(v) for v in file_contexts.values()) if file_contexts else 0
+    MAX_DIFF_CHARS = max(10_000, 30_000 - context_chars)
     if len(filtered_diff) > MAX_DIFF_CHARS:
         filtered_diff = filtered_diff[:MAX_DIFF_CHARS] + "\n\n[diff truncated — too large]"
 
@@ -81,6 +98,7 @@ async def analyze_pr(request: AnalyzeRequest):
             language=language,
             strict_mode=request.strict_mode,
             model=request.model,
+            file_contexts=file_contexts if file_contexts else None,
         )
     except ValueError as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -102,4 +120,7 @@ async def analyze_pr(request: AnalyzeRequest):
         pr_url=request.url,
         pr_number=pull_number,
         repo_name=f"{owner}/{repo}",
+        model_used=ai_result.get("model_used", request.model),
+        raw_diff=diff_raw,
+        head_sha=head_sha,
     )

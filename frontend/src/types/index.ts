@@ -20,6 +20,9 @@ export interface AnalysisResult {
   pr_url: string;
   pr_number: number;
   repo_name: string;
+  model_used: string;
+  raw_diff?: string;
+  head_sha?: string;
 }
 
 export interface HistoryEntry {

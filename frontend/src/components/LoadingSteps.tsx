@@ -1,135 +1,94 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Loader2, GitPullRequest, Filter, Brain } from "lucide-react";
+import { Loader2, GitPullRequest, Filter, Brain, Check } from "lucide-react";
 import { LoadingStep } from "@/types";
 
 interface LoadingStepsProps {
   currentStep: LoadingStep;
 }
 
-const steps: { key: LoadingStep; label: string; sublabel: string; icon: React.ElementType }[] = [
-  { key: "fetching", label: "Fetching diff", sublabel: "Connecting to GitHub API", icon: GitPullRequest },
-  { key: "filtering", label: "Filtering lines", sublabel: "Processing changed code", icon: Filter },
-  { key: "analyzing", label: "Consulting AI", sublabel: "Agent is reviewing your code", icon: Brain },
+const steps = [
+  { key: "fetching", label: "Fetching Diff", icon: GitPullRequest },
+  { key: "filtering", label: "Filtering Noise", icon: Filter },
+  { key: "analyzing", label: "AI Analysis", icon: Brain },
 ];
 
-const stepOrder: LoadingStep[] = ["idle", "fetching", "filtering", "analyzing", "done"];
-
 export default function LoadingSteps({ currentStep }: LoadingStepsProps) {
-  const [, setVisibleSteps] = useState<number>(0);
-
-  useEffect(() => {
-    const currentIndex = stepOrder.indexOf(currentStep);
-    setVisibleSteps(currentIndex);
-  }, [currentStep]);
-
-  const getStepStatus = (stepKey: LoadingStep): "pending" | "active" | "done" => {
-    const stepIdx = stepOrder.indexOf(stepKey);
-    const currentIdx = stepOrder.indexOf(currentStep);
-    if (currentIdx > stepIdx) return "done";
-    if (currentIdx === stepIdx) return "active";
-    return "pending";
+  const getActiveIndex = () => {
+    if (currentStep === "fetching") return 0;
+    if (currentStep === "filtering") return 1;
+    if (currentStep === "analyzing") return 2;
+    if (currentStep === "done") return 3;
+    return 0;
   };
 
+  const activeIndex = getActiveIndex();
+
   return (
-    <div className="flex flex-col items-center gap-8 py-12">
-      <div className="text-center animate-fade-in">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-midnight-card border border-amber-primary/30 mb-4">
-          <div className="w-2 h-2 rounded-full bg-amber-primary pulse-dot" />
-          <span className="text-sm text-amber-primary font-medium">Analysis in progress</span>
+    <div className="w-full space-y-6 animate-fade-in">
+      
+      {/* Dynamic Status Header */}
+      <div className="flex justify-center mb-8">
+        <div className="flex items-center gap-2 px-6 py-3 rounded-full bg-midnight-card/80 border border-white/10 shadow-2xl backdrop-blur-xl">
+          {steps.map((step, idx) => {
+             const isActive = activeIndex === idx;
+             const isPast = activeIndex > idx;
+             const Icon = step.icon;
+             
+             return (
+               <div key={step.key} className="flex items-center">
+                 <div className={`flex items-center gap-2 ${isActive ? 'text-amber-400' : isPast ? 'text-teal-400' : 'text-gray-600'} transition-colors duration-500`}>
+                   {isPast ? <Check className="w-4 h-4" /> : isActive ? <Loader2 className="w-4 h-4 animate-spin" /> : <Icon className="w-4 h-4 opacity-50" />}
+                   <span className={`text-sm font-bold uppercase tracking-wider ${isActive ? '' : 'hidden sm:block'}`}>
+                     {step.label}
+                   </span>
+                 </div>
+                 {idx < 2 && (
+                   <div className="w-8 sm:w-12 h-[1px] bg-white/10 mx-3 sm:mx-4" />
+                 )}
+               </div>
+             )
+          })}
         </div>
-        <h2 className="text-2xl font-bold text-gray-100">Reviewing your PR</h2>
-        <p className="text-gray-400 mt-2 text-sm">This usually takes 15–30 seconds</p>
       </div>
 
-      <div className="flex flex-col gap-4 w-full max-w-sm">
-        {steps.map((step, index) => {
-          const status = getStepStatus(step.key);
-          const Icon = step.icon;
+      {/* SKELETON BENTO GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
+        {/* Skeleton Health Score */}
+        <div className="bg-midnight-card/40 backdrop-blur-2xl border border-white/5 rounded-3xl p-8 flex flex-col items-center justify-center shadow-xl h-64">
+           <div className="w-32 h-4 bg-white/5 rounded-full mb-8" />
+           <div className="w-32 h-32 rounded-full border-8 border-white/5" />
+        </div>
 
-          return (
-            <div
-              key={step.key}
-              className={`flex items-center gap-4 p-4 rounded-xl border transition-all duration-500 ${
-                status === "active"
-                  ? "border-amber-primary/30 bg-midnight-card"
-                  : status === "done"
-                  ? "border-teal-success/30 bg-midnight-card"
-                  : "border-midnight-border bg-midnight-base opacity-40"
-              }`}
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <div
-                className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                  status === "done"
-                    ? "bg-teal-success/20 text-teal-success"
-                    : status === "active"
-                    ? "bg-amber-primary/20 text-amber-primary"
-                    : "bg-midnight-border text-gray-500"
-                }`}
-              >
-                {status === "done" ? (
-                  <Check className="w-5 h-5" />
-                ) : status === "active" ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Icon className="w-5 h-5" />
-                )}
-              </div>
-
-              <div className="flex-1">
-                <div
-                  className={`font-semibold text-sm ${
-                    status === "done"
-                      ? "text-teal-success"
-                      : status === "active"
-                      ? "text-amber-primary"
-                      : "text-gray-500"
-                  }`}
-                >
-                  {step.label}
-                </div>
-                <div className="text-xs text-gray-400 mt-0.5">{step.sublabel}</div>
-              </div>
-
-              {status === "active" && (
-                <div className="flex gap-1">
-                  {[0, 1, 2].map((dot) => (
-                    <div
-                      key={dot}
-                      className="w-1.5 h-1.5 rounded-full bg-amber-primary"
-                      style={{
-                        animation: "pulseDot 1.5s ease-in-out infinite",
-                        animationDelay: `${dot * 0.2}s`,
-                      }}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {status === "done" && (
-                <div className="text-xs text-teal-success font-medium">Done</div>
-              )}
-            </div>
-          );
-        })}
+        {/* Skeleton Summary */}
+        <div className="md:col-span-2 bg-midnight-card/40 backdrop-blur-2xl border border-white/5 rounded-3xl p-8 flex flex-col justify-center shadow-xl h-64">
+           <div className="w-2/3 h-8 bg-white/10 rounded-xl mb-6" />
+           <div className="flex gap-4 mb-8">
+             <div className="w-24 h-4 bg-white/5 rounded-full" />
+             <div className="w-32 h-4 bg-white/5 rounded-full" />
+           </div>
+           <div className="space-y-4">
+             <div className="w-full h-3 bg-white/5 rounded-full" />
+             <div className="w-5/6 h-3 bg-white/5 rounded-full" />
+             <div className="w-4/6 h-3 bg-white/5 rounded-full" />
+           </div>
+        </div>
       </div>
 
-      {/* Animated bars */}
-      <div className="flex gap-1.5 mt-4">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <div
-            key={i}
-            className="w-1.5 rounded-full bg-amber-primary/30"
-            style={{
-              height: `${16 + Math.sin(i * 0.8) * 12}px`,
-              animation: "pulseDot 1.5s ease-in-out infinite",
-              animationDelay: `${i * 0.1}s`,
-            }}
-          />
-        ))}
+      {/* Skeleton Issues Panel */}
+      <div className="bg-midnight-card/40 backdrop-blur-2xl border border-white/5 rounded-3xl p-6 shadow-xl h-48 animate-pulse">
+         <div className="flex justify-between items-center mb-6">
+           <div className="w-32 h-6 bg-white/10 rounded-xl" />
+           <div className="flex gap-2">
+             <div className="w-16 h-8 bg-white/5 rounded-xl" />
+             <div className="w-16 h-8 bg-white/5 rounded-xl" />
+           </div>
+         </div>
+         <div className="w-full h-12 bg-white/5 rounded-2xl mb-3" />
+         <div className="w-full h-12 bg-white/5 rounded-2xl" />
       </div>
+
     </div>
   );
 }

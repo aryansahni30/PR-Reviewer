@@ -8,9 +8,30 @@ interface HealthScoreProps {
 
 export default function HealthScore({ score }: HealthScoreProps) {
   const [animated, setAnimated] = useState(false);
+  const [count, setCount] = useState(0);
 
   useEffect(() => {
-    const timer = setTimeout(() => setAnimated(true), 100);
+    let startTimestamp: number | null = null;
+    const duration = 1200;
+    const target = Math.max(0, Math.min(100, score));
+
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      const easeOut = 1 - Math.pow(1 - progress, 4);
+      
+      setCount(Math.floor(easeOut * target));
+
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      setAnimated(true);
+      window.requestAnimationFrame(step);
+    }, 100);
+
     return () => clearTimeout(timer);
   }, [score]);
 
@@ -63,7 +84,7 @@ export default function HealthScore({ score }: HealthScoreProps) {
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
           <span className="text-3xl font-bold tabular-nums" style={{ color }}>
-            {animated ? clampedScore : 0}
+            {count}
           </span>
           <span className="text-xs text-gray-400 mt-0.5">/ 100</span>
         </div>

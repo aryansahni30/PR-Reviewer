@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Search, Zap, Check, AlertTriangle, X } from "lucide-react";
 
 interface LandingInputProps {
-  onAnalyze: (url: string, strictMode: boolean) => void;
+  onAnalyze: (url: string, strictMode: boolean, model: string) => void;
   isLoading: boolean;
   hasResult: boolean;
   onHarsher: () => void;
@@ -38,6 +38,7 @@ export default function LandingInput({
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [placeholderOpacity, setPlaceholderOpacity] = useState(1);
   const [toast, setToast] = useState<string | null>(null);
+  const [model, setModel] = useState("deepseek-ai/deepseek-v3.2");
 
   const isValid = isValidGitHubPRUrl(url);
 
@@ -68,7 +69,7 @@ export default function LandingInput({
       );
       return;
     }
-    onAnalyze(url.trim(), false);
+    onAnalyze(url.trim(), false, model);
   };
 
   return (
@@ -87,21 +88,35 @@ export default function LandingInput({
         </div>
       )}
 
-      {/* Sample PR chips — shown only on landing */}
-      {!hasResult && !isLoading && (
-        <div className="mb-3 flex flex-wrap gap-2">
-          {SAMPLE_PRS.map((s) => (
+      {/* Top Controls: Chips & Model Selector */}
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap gap-2 min-h-[30px] items-center">
+          {!hasResult && !isLoading && SAMPLE_PRS.map((s) => (
             <button
               key={s.url}
               type="button"
               onClick={() => setUrl(s.url)}
-              className="px-3 py-1.5 rounded-lg text-xs text-gray-400 bg-midnight-card border border-midnight-border hover:border-amber-primary hover:text-amber-primary transition-all shadow-sm"
+              className="px-3 py-1.5 rounded-lg text-xs text-gray-400 bg-midnight-card border border-white/5 hover:border-amber-primary hover:text-amber-primary transition-all shadow-sm"
             >
               {s.label}
             </button>
           ))}
         </div>
-      )}
+
+        {!isLoading && (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-midnight-card/40 backdrop-blur-md border border-white/5 shadow-sm">
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest hidden sm:block">Engine:</span>
+            <select
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              className="bg-transparent text-xs text-amber-500 font-bold outline-none cursor-pointer hover:text-amber-400 transition-colors [&>option]:bg-midnight-card [&>option]:text-white"
+            >
+              <option value="deepseek-ai/deepseek-v3.2">DeepSeek V3</option>
+              <option value="qwen/qwen3.5-122b-a10b">Qwen3.5 (122B)</option>
+            </select>
+          </div>
+        )}
+      </div>
 
       {/* Input bar */}
       <form onSubmit={handleSubmit}>
@@ -150,6 +165,8 @@ export default function LandingInput({
               className="w-full py-4 text-sm text-gray-100 bg-transparent outline-none disabled:opacity-50 disabled:cursor-not-allowed font-mono"
             />
           </div>
+
+
 
           {/* Valid URL indicator */}
           {isValid && !isLoading && (
