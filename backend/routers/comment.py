@@ -139,9 +139,8 @@ async def post_inline_comment(request: InlineCommentRequest):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    # Format the comment body with AI badge
-    severity_emoji = "🤖"
-    body = f"{severity_emoji} **AI Review Comment**\n\n{request.body}\n\n---\n*Posted by [PR Code Reviewer](https://github.com) — AI-powered code review*"
+    # Format the comment body
+    body = f"{request.body}\n\n---\n*Posted by [PR Code Reviewer](https://pr-reviewer-as.vercel.app/) — AI-powered code review*"
 
     try:
         result = await post_pr_review_comment(

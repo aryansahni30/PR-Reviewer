@@ -143,12 +143,22 @@ async def post_pr_review_comment(
         if response.status_code == 401:
             raise ValueError("GitHub authentication failed. Check your GITHUB_TOKEN.")
         if response.status_code == 403:
-            raise ValueError("Insufficient permissions to post review comments.")
+            raise ValueError("Insufficient permissions to post review comments. Ensure your token has 'repo' scope.")
         if response.status_code == 404:
-            raise ValueError(f"PR not found: {owner}/{repo}#{pull_number}")
+            detail = response.json().get("message", "Not Found")
+            logger.error(f"GitHub 404 for POST {url}: {detail}")
+            raise ValueError(
+                f"PR not found or token lacks access: {owner}/{repo}#{pull_number}. "
+                f"Ensure your GITHUB_TOKEN has 'repo' scope and hasn't expired. GitHub says: {detail}"
+            )
         if response.status_code == 422:
-            error_detail = response.json().get("message", "Invalid line or path")
-            raise ValueError(f"GitHub rejected the comment: {error_detail}")
+            error_body = response.json()
+            error_detail = error_body.get("message", "Invalid request")
+            errors = error_body.get("errors", [])
+            error_msgs = [e.get("message", str(e)) for e in errors] if errors else []
+            full_msg = f"{error_detail}: {'; '.join(error_msgs)}" if error_msgs else error_detail
+            logger.error(f"GitHub 422 for POST {url}: {full_msg}")
+            raise ValueError(f"GitHub rejected the comment: {full_msg}")
         response.raise_for_status()
         return response.json()
 
