@@ -16,6 +16,12 @@ import {
 } from "lucide-react";
 import { Issue, SeverityFilter } from "@/types";
 import { postInlineComment } from "@/lib/api";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 interface InlineDiffReviewProps {
   rawDiff: string;
@@ -35,8 +41,7 @@ const severityConfig = {
     textColor: "text-red-400",
     accentBorder: "border-l-red-500",
     bgColor: "bg-red-500/5",
-    badgeStyle: "bg-red-500/15 text-red-300 border-red-500/30",
-    filterActive: "bg-red-500/20 text-red-300 border-red-500/30",
+    badgeClass: "bg-red-500/15 text-red-300 border-red-500/30 hover:bg-red-500/20",
   },
   warning: {
     icon: AlertTriangle,
@@ -44,8 +49,7 @@ const severityConfig = {
     textColor: "text-amber-400",
     accentBorder: "border-l-amber-500",
     bgColor: "bg-amber-500/5",
-    badgeStyle: "bg-amber-500/15 text-amber-300 border-amber-500/30",
-    filterActive: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+    badgeClass: "bg-amber-500/15 text-amber-300 border-amber-500/30 hover:bg-amber-500/20",
   },
   suggestion: {
     icon: Lightbulb,
@@ -53,8 +57,7 @@ const severityConfig = {
     textColor: "text-teal-400",
     accentBorder: "border-l-teal-500",
     bgColor: "bg-teal-500/5",
-    badgeStyle: "bg-teal-500/15 text-teal-300 border-teal-500/30",
-    filterActive: "bg-teal-500/20 text-teal-300 border-teal-500/30",
+    badgeClass: "bg-teal-500/15 text-teal-300 border-teal-500/30 hover:bg-teal-500/20",
   },
 };
 
@@ -120,7 +123,10 @@ function extractSnippet(
   const start = Math.max(0, targetIdx - radius);
   const end = Math.min(allFileLines.length, targetIdx + radius + 1);
   return {
-    lines: allFileLines.slice(start, end).map((l) => ({ ...l, isTarget: l.num === targetLine && l.type !== "removed" })),
+    lines: allFileLines.slice(start, end).map((l) => ({
+      ...l,
+      isTarget: l.num === targetLine && l.type !== "removed",
+    })),
   };
 }
 
@@ -167,85 +173,87 @@ function IssueCard({
   }, [prUrl, headSha, issue, config.label]);
 
   return (
-    <div
-      className={`border-l-4 ${config.accentBorder} ${config.bgColor} rounded-r-xl overflow-hidden issue-card transition-all`}
+    <Card
+      className={cn(
+        "border-l-4 rounded-r-xl bg-card/60 border-border issue-card overflow-hidden",
+        config.accentBorder,
+        config.bgColor
+      )}
       style={{ animationDelay: `${index * 0.05}s` }}
     >
-      {/* Main row: icon + description + confidence */}
-      <div className="flex items-start gap-3 p-4">
-        <div className={`flex-shrink-0 mt-0.5 ${config.textColor}`}>
+      {/* Main row */}
+      <CardHeader className="flex flex-row items-start gap-3 p-4 pb-2 space-y-0">
+        <div className={cn("flex-shrink-0 mt-0.5", config.textColor)}>
           <Icon className="w-4 h-4" />
         </div>
 
         <div className="flex-1 min-w-0">
-          {/* Top: severity + file + line */}
           <div className="flex items-center gap-2 flex-wrap mb-1.5">
-            <span className={`text-xs font-bold uppercase tracking-wide ${config.textColor}`}>
+            <Badge
+              variant="outline"
+              className={cn("text-[10px] font-bold uppercase tracking-wide border", config.badgeClass)}
+            >
               {config.label}
-            </span>
-            <div className="flex items-center gap-1 text-gray-500 text-xs">
+            </Badge>
+            <div className="flex items-center gap-1 text-muted-foreground text-xs">
               <FileCode className="w-3 h-3" />
-              <code className="text-gray-500 font-mono text-xs truncate max-w-[200px]">
-                {issue.file}
-              </code>
-              {issue.line > 0 && <span className="text-gray-500">:{issue.line}</span>}
+              <code className="font-mono text-xs truncate max-w-[200px]">{issue.file}</code>
+              {issue.line > 0 && (
+                <span className="text-muted-foreground">
+                  :<span className={config.textColor}>{issue.line}</span>
+                </span>
+              )}
             </div>
-            <span className="ml-auto text-xs text-gray-500 flex-shrink-0">
+            <span className="ml-auto text-xs text-muted-foreground flex-shrink-0">
               {issue.confidence}% confidence
             </span>
           </div>
 
-          {/* Description — always visible, full text */}
-          <p className="text-sm text-gray-300 leading-relaxed">
-            {issue.description}
-          </p>
+          <p className="text-sm text-foreground/80 leading-relaxed">{issue.description}</p>
         </div>
 
         {/* Confidence bar */}
         <div className="flex-shrink-0 flex flex-col items-end gap-1 mt-3">
           <div className="w-16 h-1.5 bg-white/5 rounded-full overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all duration-700 ${
-                issue.confidence >= 80
-                  ? "bg-green-500"
-                  : issue.confidence >= 60
-                  ? "bg-amber-500"
-                  : "bg-red-500"
-              }`}
+              className={cn(
+                "h-full rounded-full transition-all duration-700",
+                issue.confidence >= 80 ? "bg-green-500" : issue.confidence >= 60 ? "bg-amber-500" : "bg-red-500"
+              )}
               style={{ width: `${issue.confidence}%` }}
             />
           </div>
         </div>
-      </div>
+      </CardHeader>
+
+      <Separator className="bg-white/5 mx-4" />
 
       {/* Show code toggle */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className={`w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-semibold transition-all border-t border-white/5 ${
+        className={cn(
+          "w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-semibold transition-all",
           expanded
-            ? "text-gray-400 hover:text-gray-300 bg-white/[0.02]"
+            ? "text-muted-foreground hover:text-foreground bg-white/[0.02]"
             : "text-blue-400 hover:text-blue-300 bg-blue-500/5 hover:bg-blue-500/10"
-        }`}
+        )}
       >
         <Code2 className="w-3.5 h-3.5" />
         {expanded ? "Hide code" : "Show code"}
-        {expanded ? (
-          <ChevronUp className="w-3 h-3" />
-        ) : (
-          <ChevronDown className="w-3 h-3" />
-        )}
+        {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
       </button>
 
-      {/* Expanded section: full description + code snippet + post button */}
+      {/* Expanded section */}
       {expanded && (
-        <div className="border-t border-white/5">
+        <CardContent className="p-0 border-t border-white/5">
           {/* Code snippet */}
           {snippet && snippet.lines.length > 0 && (
-            <div className="mx-4 mb-3 rounded-xl overflow-hidden border border-white/5 bg-black/30">
+            <div className="mx-4 mt-3 mb-2 rounded-xl overflow-hidden border border-border bg-black/30">
               {snippet.lines.map((line, idx) => (
                 <div
                   key={idx}
-                  className={`flex text-[12px] font-mono leading-[1.7] ${
+                  className={cn(
+                    "flex text-[12px] font-mono leading-[1.7]",
                     line.isTarget
                       ? "bg-amber-500/10 border-l-2 border-l-amber-400"
                       : line.type === "added"
@@ -253,32 +261,30 @@ function IssueCard({
                       : line.type === "removed"
                       ? "bg-red-500/5"
                       : ""
-                  }`}
+                  )}
                 >
-                  <span className="w-10 px-2 text-right text-gray-600 select-none flex-shrink-0 border-r border-white/5">
+                  <span className="w-10 px-2 text-right text-muted-foreground/50 select-none flex-shrink-0 border-r border-white/5">
                     {line.type !== "removed" ? line.num : ""}
                   </span>
                   <span
-                    className={`w-5 text-center select-none flex-shrink-0 ${
-                      line.type === "added"
-                        ? "text-green-500"
-                        : line.type === "removed"
-                        ? "text-red-500"
-                        : "text-transparent"
-                    }`}
+                    className={cn(
+                      "w-5 text-center select-none flex-shrink-0",
+                      line.type === "added" ? "text-green-500" : line.type === "removed" ? "text-red-500" : "text-transparent"
+                    )}
                   >
                     {line.type === "added" ? "+" : line.type === "removed" ? "-" : " "}
                   </span>
                   <code
-                    className={`flex-1 px-2 whitespace-pre overflow-x-auto ${
+                    className={cn(
+                      "flex-1 px-2 whitespace-pre overflow-x-auto",
                       line.isTarget
                         ? "text-amber-200"
                         : line.type === "added"
                         ? "text-green-300/80"
                         : line.type === "removed"
                         ? "text-red-300/50 line-through"
-                        : "text-gray-500"
-                    }`}
+                        : "text-muted-foreground"
+                    )}
                   >
                     {line.code}
                   </code>
@@ -287,24 +293,23 @@ function IssueCard({
             </div>
           )}
 
-          {/* Error message */}
-          {errorMsg && (
-            <p className="text-xs text-red-400 px-4 mb-2">{errorMsg}</p>
-          )}
+          {errorMsg && <p className="text-xs text-destructive px-4 mb-2">{errorMsg}</p>}
 
-          {/* Post to GitHub button */}
+          {/* Post button row */}
           <div className="flex items-center justify-end gap-2 px-4 pb-3">
             {postStatus === "idle" && (
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handlePost}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 hover:border-white/20 hover:text-white transition-all active:scale-[0.97]"
+                className="gap-1.5 text-xs border-border/60 bg-card/50 text-muted-foreground hover:text-foreground"
               >
                 <MessageSquare className="w-3.5 h-3.5" />
                 Post to GitHub
-              </button>
+              </Button>
             )}
             {postStatus === "posting" && (
-              <div className="flex items-center gap-1.5 px-4 py-2 text-xs text-gray-400">
+              <div className="flex items-center gap-1.5 px-3 py-2 text-xs text-muted-foreground">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 Posting…
               </div>
@@ -314,7 +319,7 @@ function IssueCard({
                 href={commentUrl || "#"}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-teal-500/10 border border-teal-500/30 text-teal-300 hover:bg-teal-500/20 transition-all"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold border border-teal-500/30 bg-teal-500/10 text-teal-300 hover:bg-teal-500/20 transition-all"
               >
                 <Check className="w-3.5 h-3.5" />
                 Posted
@@ -322,31 +327,27 @@ function IssueCard({
               </a>
             )}
             {postStatus === "error" && (
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handlePost}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-red-500/10 border border-red-500/30 text-red-300 hover:bg-red-500/20 transition-all"
+                className="gap-1.5 text-xs border-destructive/30 bg-destructive/10 text-red-300 hover:bg-destructive/20"
               >
                 Retry
-              </button>
+              </Button>
             )}
           </div>
-        </div>
+        </CardContent>
       )}
-    </div>
+    </Card>
   );
 }
 
 // ─── Main component ───────────────────────────────
 
-export default function InlineDiffReview({
-  rawDiff,
-  issues,
-  prUrl,
-  headSha,
-}: InlineDiffReviewProps) {
+export default function InlineDiffReview({ rawDiff, issues, prUrl, headSha }: InlineDiffReviewProps) {
   const [filter, setFilter] = useState<SeverityFilter>("all");
 
-  // Pre-compute snippets
   const issuesWithSnippets = useMemo(() => {
     return issues.map((issue) => ({
       issue,
@@ -354,27 +355,17 @@ export default function InlineDiffReview({
     }));
   }, [rawDiff, issues]);
 
-  const bugs = issues.filter((i) => i.severity === "bug");
-  const warnings = issues.filter((i) => i.severity === "warning");
+  const bugs        = issues.filter((i) => i.severity === "bug");
+  const warnings    = issues.filter((i) => i.severity === "warning");
   const suggestions = issues.filter((i) => i.severity === "suggestion");
-
-  const filtered = filter === "all" ? issuesWithSnippets : issuesWithSnippets.filter((i) => i.issue.severity === filter);
-
-  const filterButtons: { key: SeverityFilter; label: string; count: number }[] = [
-    { key: "all", label: "All", count: issues.length },
-    { key: "bug", label: "Bugs", count: bugs.length },
-    { key: "warning", label: "Warnings", count: warnings.length },
-    { key: "suggestion", label: "Suggestions", count: suggestions.length },
-  ];
+  const filtered    = filter === "all" ? issuesWithSnippets : issuesWithSnippets.filter((i) => i.issue.severity === filter);
 
   if (issues.length === 0) {
     return (
       <div className="w-full p-8 text-center animate-fade-in">
         <div className="text-4xl mb-3">🎉</div>
-        <h3 className="text-lg font-semibold text-gray-100 mb-2">No issues found!</h3>
-        <p className="text-gray-400 text-sm">
-          No bugs, warnings, or suggestions found in this PR. Excellent work!
-        </p>
+        <h3 className="text-lg font-semibold text-foreground mb-2">No issues found!</h3>
+        <p className="text-muted-foreground text-sm">No bugs, warnings, or suggestions found in this PR.</p>
       </div>
     );
   }
@@ -382,53 +373,62 @@ export default function InlineDiffReview({
   return (
     <div className="w-full animate-fade-in p-2 sm:p-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 px-1">
-        <h3 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+      <div className="flex items-center justify-between mb-5 px-1">
+        <h3 className="text-lg font-bold text-foreground tracking-tight flex items-center gap-2">
           Issues
-          <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-xs text-gray-300 font-medium">
-            ({issues.length})
-          </span>
+          <Badge variant="secondary" className="text-xs font-medium px-2.5 py-0.5">
+            {issues.length}
+          </Badge>
         </h3>
+
+        <div className="flex items-center gap-2">
+          {bugs.length > 0 && (
+            <Badge variant="outline" className="text-[10px] bg-red-500/10 text-red-400 border-red-500/20">
+              {bugs.length} Bug{bugs.length > 1 ? "s" : ""}
+            </Badge>
+          )}
+          {warnings.length > 0 && (
+            <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-400 border-amber-500/20">
+              {warnings.length} Warning{warnings.length > 1 ? "s" : ""}
+            </Badge>
+          )}
+          {suggestions.length > 0 && (
+            <Badge variant="outline" className="text-[10px] bg-teal-500/10 text-teal-400 border-teal-500/20">
+              {suggestions.length} Suggestion{suggestions.length > 1 ? "s" : ""}
+            </Badge>
+          )}
+        </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-2 flex-wrap mb-5">
-        {filterButtons.map((btn) => (
-          <button
-            key={btn.key}
-            onClick={() => setFilter(btn.key)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all shadow-sm ${
-              filter === btn.key
-                ? btn.key === "bug"
-                  ? "bg-red-500/20 text-red-300 border-red-500/30"
-                  : btn.key === "warning"
-                  ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
-                  : btn.key === "suggestion"
-                  ? "bg-teal-500/20 text-teal-300 border-teal-500/30"
-                  : "bg-white/10 text-white border-white/20"
-                : "bg-black/20 text-gray-400 border-white/5 hover:border-white/10 hover:text-gray-200 hover:bg-black/40"
-            }`}
-          >
-            {btn.label}
-            {btn.count > 0 && (
-              <span
-                className={`ml-2 px-1.5 py-0.5 rounded text-[10px] ${
-                  filter === btn.key ? "bg-black/40 text-current" : "bg-white/5 text-gray-400"
-                }`}
-              >
-                {btn.count}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+      {/* Filter tabs */}
+      <Tabs value={filter} onValueChange={(v) => setFilter(v as SeverityFilter)} className="mb-5">
+        <TabsList className="bg-muted/50 border border-border h-auto p-1 gap-1">
+          {[
+            { key: "all" as SeverityFilter,        label: "All",         count: issues.length },
+            { key: "bug" as SeverityFilter,         label: "Bugs",        count: bugs.length },
+            { key: "warning" as SeverityFilter,     label: "Warnings",    count: warnings.length },
+            { key: "suggestion" as SeverityFilter,  label: "Suggestions", count: suggestions.length },
+          ].map((tab) => (
+            <TabsTrigger
+              key={tab.key}
+              value={tab.key}
+              className="text-xs font-bold uppercase tracking-wide data-[state=active]:bg-card data-[state=active]:text-foreground px-3 py-1.5 rounded"
+            >
+              {tab.label}
+              {tab.count > 0 && (
+                <span className="ml-1.5 px-1.5 py-0.5 rounded text-[10px] bg-white/5 text-muted-foreground">
+                  {tab.count}
+                </span>
+              )}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
-      {/* Issue cards */}
+      {/* Cards */}
       <div className="flex flex-col gap-3">
         {filtered.length === 0 ? (
-          <div className="text-center py-6 text-gray-500 text-sm">
-            No {filter === "all" ? "" : filter + "s"} found.
-          </div>
+          <p className="text-center py-6 text-muted-foreground text-sm">No {filter}s found.</p>
         ) : (
           filtered.map(({ issue, snippet }, idx) => (
             <IssueCard
@@ -443,7 +443,7 @@ export default function InlineDiffReview({
         )}
       </div>
 
-      <p className="mt-5 text-[11px] text-gray-600 text-center">
+      <p className="mt-5 text-[11px] text-muted-foreground text-center">
         Expand any issue to view the code and post it as an inline review comment on GitHub.
       </p>
     </div>

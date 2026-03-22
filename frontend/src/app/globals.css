@@ -1,190 +1,95 @@
+@import "tw-animate-css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 17, 24, 39;
-  --background-rgb: 250, 250, 250;
-}
+/* ─── Scrollbar ──────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2a2d3d; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #3a3d55; }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-  background-color: #fafafa;
-  color: rgb(var(--foreground-rgb));
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f3f4f6;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
-}
-
-/* Smooth transitions */
-* {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke,
-    opacity, box-shadow, transform, filter, backdrop-filter;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
-
-.no-transition {
-  transition: none !important;
-}
-
-/* Gauge animation */
+/* ─── Animations ─────────────────────────────────── */
 @keyframes gaugeFill {
-  from {
-    stroke-dashoffset: 339.3;
-  }
-
-  to {
-    stroke-dashoffset: var(--gauge-offset);
-  }
+  from { stroke-dashoffset: 339.3; }
+  to   { stroke-dashoffset: var(--gauge-offset); }
 }
+.gauge-arc { animation: gaugeFill 1.2s ease-out forwards; }
 
-.gauge-arc {
-  animation: gaugeFill 1.2s ease-out forwards;
-}
-
-/* Issue card stagger */
 @keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
+.issue-card { animation: slideUp 0.3s ease-out forwards; }
 
-.issue-card {
-  animation: slideUp 0.3s ease-out forwards;
-}
-
-/* Gradient text — purple accent */
-.gradient-text {
-  background: linear-gradient(135deg, #7c3aed, #a855f7);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Input focus glow — soft purple */
-.input-glow {
-  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12), 0 0 24px rgba(124, 58, 237, 0.06);
-}
-
-/* Pulse dot */
 @keyframes pulseDot {
-
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-
-  50% {
-    transform: scale(1.25);
-    opacity: 0.6;
-  }
+  0%, 100% { transform: scale(1);    opacity: 1; }
+  50%       { transform: scale(1.25); opacity: 0.6; }
 }
+.pulse-dot { animation: pulseDot 1.5s ease-in-out infinite; }
 
-.pulse-dot {
-  animation: pulseDot 1.5s ease-in-out infinite;
-}
-
-/* Code block */
-.diff-line {
-  font-family: var(--font-geist-mono), "Menlo", "Monaco", "Courier New", monospace;
-  font-size: 12px;
-  line-height: 1.6;
-  white-space: pre;
-}
-
-/* Toast */
 @keyframes toastSlide {
-  from {
-    opacity: 0;
-    transform: translateX(100%);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(100%); }
+  to   { opacity: 1; transform: translateX(0); }
 }
-
-.toast-enter {
-  animation: toastSlide 0.3s ease-out forwards;
-}
+.toast-enter { animation: toastSlide 0.3s ease-out forwards; }
 
 @keyframes toastExit {
-  from {
-    opacity: 1;
-    transform: translateX(0);
-  }
-
-  to {
-    opacity: 0;
-    transform: translateX(100%);
-  }
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(100%); }
 }
+.toast-exit { animation: toastExit 0.3s ease-in forwards; }
 
-.toast-exit {
-  animation: toastExit 0.3s ease-in forwards;
-}
+.animate-fade-in  { animation: fadeIn  0.3s ease-in-out; }
+.animate-slide-up { animation: slideUpGlobal 0.4s ease-out; }
+.input-glow { box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12), 0 0 24px rgba(124, 58, 237, 0.06); }
+.no-transition { transition: none !important; }
 
-/* Fade in */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; } to { opacity: 1; }
 }
-
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-/* Slide up */
 @keyframes slideUpGlobal {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.animate-slide-up {
-  animation: slideUpGlobal 0.4s ease-out;
+/* ─── shadcn/ui CSS variables — dark-mode tuned to match app palette ── */
+@layer base {
+  :root {
+    --background:         224 33% 9%;    /* #0F111A midnight-base  */
+    --foreground:         210 20% 96%;   /* near-white             */
+    --card:               228 25% 13%;   /* #181B28 midnight-card  */
+    --card-foreground:    210 20% 96%;
+    --popover:            228 25% 13%;
+    --popover-foreground: 210 20% 96%;
+    --primary:            43 100% 50%;   /* amber #FFC300          */
+    --primary-foreground: 224 33%  9%;
+    --secondary:          228 20% 18%;
+    --secondary-foreground: 210 15% 75%;
+    --muted:              228 20% 16%;
+    --muted-foreground:   215 15% 55%;
+    --accent:             228 20% 18%;
+    --accent-foreground:  210 20% 90%;
+    --destructive:        0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border:             228 22% 20%;   /* #262A3D midnight-border */
+    --input:              228 22% 20%;
+    --ring:               43 100% 50%;
+    --radius: 0.75rem;
+  }
+
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke,
+      opacity, box-shadow, transform, filter, backdrop-filter;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+
+  html, body {
+    @apply bg-background text-foreground font-sans;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
 }
