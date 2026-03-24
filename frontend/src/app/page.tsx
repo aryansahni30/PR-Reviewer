@@ -13,13 +13,13 @@ import {
   Zap,
 } from "lucide-react";
 import LandingInput from "@/components/LandingInput";
-import LoadingSteps from "@/components/LoadingSteps";
+import ProgressFeed from "@/components/ProgressFeed";
 import HealthScore from "@/components/HealthScore";
 import SummaryCard from "@/components/SummaryCard";
 import InlineDiffReview from "@/components/InlineDiffReview";
 import { saveToHistory } from "@/components/AnalysisHistory";
-import { analyzePR, postComment } from "@/lib/api";
-import { AnalysisResult, HistoryEntry, LoadingStep } from "@/types";
+import { analyzePR, postComment, getPRFiles } from "@/lib/api";
+import { AnalysisResult, HistoryEntry, ProgressStep } from "@/types";
 
 interface Toast {
   id: string;
@@ -73,8 +73,16 @@ function HistoryStrip({ onSelect }: { onSelect: (result: AnalysisResult) => void
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function HomePage() {
   const [url, setUrl] = useState("");
-  const [loadingStep, setLoadingStep] = useState<LoadingStep>("idle");
   const [result, setResult] = useState<AnalysisResult | null>(null);
+
+  const INITIAL_STEPS: ProgressStep[] = [
+    { id: "connecting",    label: "Connecting to GitHub",  status: "pending" },
+    { id: "fetching",      label: "Fetching PR diff",       status: "pending" },
+    { id: "loading_files", label: "Loading file contexts",  status: "pending" },
+    { id: "analyzing",     label: "Analyzing with AI",      status: "pending" },
+    { id: "compiling",     label: "Compiling results",      status: "pending" },
+  ];
+  const [progressSteps, setProgressSteps] = useState<ProgressStep[]>(INITIAL_STEPS);
   const [error, setError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [isPostingComment, setIsPostingComment] = useState(false);
@@ -92,6 +100,42 @@ export default function HomePage() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  // ── Step state helpers ────────────────────────────────────────────────────
+  const activateStep = useCallback(
+    (id: ProgressStep["id"], detail?: string) => {
+      setProgressSteps((prev) =>
+        prev.map((s) =>
+          s.id === id
+            ? { ...s, status: "active", detail, startedAt: Date.now() }
+            : s
+        )
+      );
+    },
+    []
+  );
+
+  const completeStep = useCallback(
+    (id: ProgressStep["id"], detail?: string) => {
+      setProgressSteps((prev) =>
+        prev.map((s) =>
+          s.id === id
+            ? { ...s, status: "done", detail: detail ?? s.detail, durationMs: s.startedAt ? Date.now() - s.startedAt : 0 }
+            : s
+        )
+      );
+    },
+    []
+  );
+
+  const setScanningFile = useCallback(
+    (file: string) => {
+      setProgressSteps((prev) =>
+        prev.map((s) => (s.id === "analyzing" ? { ...s, scanningFile: file } : s))
+      );
+    },
+    []
+  );
+
   const runAnalysis = useCallback(
     async (prUrl: string, strictMode: boolean, selectedModel: string = "deepseek-ai/deepseek-v3.2") => {
       setUrl(prUrl);
@@ -101,27 +145,82 @@ export default function HomePage() {
       setShowSplitTips(false);
       if (!strictMode) setHasUsedStrictMode(false);
 
-      setLoadingStep("fetching");
-      await new Promise((r) => setTimeout(r, 800));
-      setLoadingStep("filtering");
-      await new Promise((r) => setTimeout(r, 600));
-      setLoadingStep("analyzing");
+      // Reset steps
+      setProgressSteps([
+        { id: "connecting",    label: "Connecting to GitHub",  status: "pending" },
+        { id: "fetching",      label: "Fetching PR diff",       status: "pending" },
+        { id: "loading_files", label: "Loading file contexts",  status: "pending" },
+        { id: "analyzing",     label: "Analyzing with AI",      status: "pending" },
+        { id: "compiling",     label: "Compiling results",      status: "pending" },
+      ]);
+
+      // Extract repo slug from URL for display (e.g. "owner/repo #123")
+      const repoSlug = (() => {
+        try {
+          const parts = prUrl.split("github.com/")[1]?.split("/") ?? [];
+          return parts.length >= 4 ? `${parts[0]}/${parts[1]} #${parts[3]}` : prUrl;
+        } catch { return prUrl; }
+      })();
+
+      // ── Step 1: Connecting ────────────────────────────────────────────────
+      activateStep("connecting", repoSlug);
+      await new Promise((r) => setTimeout(r, 350));
+      completeStep("connecting");
+
+      // ── Step 2: Fetch diff + file list (concurrent pre-flight) ────────────
+      activateStep("fetching");
+
+      // Fire pre-flight file list AND main analysis at the same time
+      let filesPromise: Promise<{ files: string[]; total_changed_lines: number }> =
+        getPRFiles(prUrl).catch(() => ({ files: [], total_changed_lines: 0 }));
+      let analysisPromise = analyzePR(prUrl, strictMode, selectedModel);
+
+      // When file list comes back, move to next steps and start cycling
+      filesPromise.then(({ files, total_changed_lines }) => {
+        completeStep("fetching", `${total_changed_lines} lines changed`);
+        activateStep(
+          "loading_files",
+          `${files.length} file${files.length !== 1 ? "s" : ""} · ${
+            files.slice(0, 3).map((f) => f.split("/").pop()).join(", ")
+          }${files.length > 3 ? "…" : ""}`
+        );
+        setTimeout(() => {
+          completeStep("loading_files");
+          activateStep("analyzing", selectedModel.split("/").pop() ?? selectedModel);
+
+          // Cycle through file names
+          if (files.length > 0) {
+            let idx = 0;
+            setScanningFile(files[idx]);
+            const interval = setInterval(() => {
+              idx = (idx + 1) % files.length;
+              setScanningFile(files[idx]);
+            }, 1400);
+            // Clean up when analysis resolves
+            analysisPromise.finally(() => clearInterval(interval));
+          }
+        }, 600);
+      });
 
       try {
-        const data = await analyzePR(prUrl, strictMode, selectedModel);
-        setLoadingStep("done");
+        const data = await analysisPromise;
+        completeStep("analyzing");
+        activateStep("compiling");
+        await new Promise((r) => setTimeout(r, 250));
+        completeStep("compiling", `${data.issues.length} issue${data.issues.length !== 1 ? "s" : ""} found`);
+        await new Promise((r) => setTimeout(r, 300));
         setResult(data);
         if (data.total_changed_lines > 500) setShowLargePRWarning(true);
         saveToHistory(data);
         addToast({ type: "success", message: `Analysis complete — health score: ${data.health_score}/100` });
       } catch (err) {
-        setLoadingStep("idle");
+        setProgressSteps((prev) => prev.map((s) => s.status === "active" ? { ...s, status: "pending" } : s));
         const message = err instanceof Error ? err.message : "Analysis failed. Please try again.";
         setError(message);
         addToast({ type: "error", message });
       }
     },
-    [addToast]
+    [addToast, activateStep, completeStep, setScanningFile]
   );
 
   const handleAnalyze = useCallback(
@@ -159,11 +258,11 @@ export default function HomePage() {
   const handleSelectHistory = useCallback((historicalResult: AnalysisResult) => {
     setResult(historicalResult);
     setUrl(historicalResult.pr_url);
-    setLoadingStep("done");
+    setProgressSteps((prev) => prev.map((s) => ({ ...s, status: "done" as const })));
     setError(null);
   }, []);
 
-  const isLoading = loadingStep !== "idle" && loadingStep !== "done";
+  const isLoading = progressSteps.some((s) => s.status === "active");
   const hasResult = result !== null;
 
   return (
@@ -336,7 +435,7 @@ export default function HomePage() {
         {/* Loading State */}
         {isLoading && (
           <div className="max-w-5xl mx-auto w-full relative z-10 pt-4">
-            <LoadingSteps currentStep={loadingStep} />
+            <ProgressFeed steps={progressSteps} />
           </div>
         )}
 

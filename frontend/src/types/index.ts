@@ -36,6 +36,24 @@ export interface RateLimit {
   resetAt: number; // timestamp
 }
 
-export type LoadingStep = "idle" | "fetching" | "filtering" | "analyzing" | "done";
+export type LoadingStep =
+  | "idle"
+  | "connecting"
+  | "fetching"
+  | "loading_files"
+  | "analyzing"
+  | "compiling"
+  | "done";
+
+export interface ProgressStep {
+  id: LoadingStep;
+  label: string;
+  detail?: string;       // dynamic sub-text (repo, file count, model name)
+  scanningFile?: string; // file currently being cycled during AI analysis
+  status: "pending" | "active" | "done";
+  startedAt?: number;    // timestamp when step became active
+  durationMs?: number;   // set when step completes
+}
 
 export type SeverityFilter = "all" | "bug" | "warning" | "suggestion";
+

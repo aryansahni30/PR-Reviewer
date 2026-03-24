@@ -2,6 +2,19 @@ import { AnalysisResult } from "@/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+export async function getPRFiles(
+  url: string
+): Promise<{ files: string[]; total_changed_lines: number }> {
+  const response = await fetch(
+    `${API_URL}/api/pr-files?url=${encodeURIComponent(url)}`
+  );
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ detail: "Unknown error" }));
+    throw new Error(err.detail || `Request failed with status ${response.status}`);
+  }
+  return response.json();
+}
+
 export async function analyzePR(
   url: string,
   strictMode: boolean = false,

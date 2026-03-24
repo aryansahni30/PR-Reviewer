@@ -1,5 +1,5 @@
 import traceback
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from services.github import (
     parse_pr_url,
@@ -9,10 +9,32 @@ from services.github import (
     filter_changed_lines,
     count_changed_lines,
     detect_language_from_diff,
+    extract_changed_files,
 )
 from services.ai import analyze_pr_diff
 
 router = APIRouter()
+
+
+@router.get("/pr-files")
+async def get_pr_files(url: str = Query(..., description="GitHub PR URL")):
+    """Lightweight endpoint — returns just the changed file list and line count.
+    Used by the frontend to power the file-cycling ticker during AI analysis."""
+    try:
+        owner, repo, pull_number = parse_pr_url(url)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    try:
+        diff = await fetch_pr_diff(owner, repo, pull_number)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"GitHub API error: {str(e)}")
+
+    files = extract_changed_files(diff)
+    total = count_changed_lines(diff)
+    return {"files": files, "total_changed_lines": total}
 
 
 class AnalyzeRequest(BaseModel):
