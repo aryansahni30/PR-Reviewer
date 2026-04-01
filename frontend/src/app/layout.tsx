@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import AuthProvider from "@/components/AuthProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -23,9 +24,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`dark ${GeistSans.variable} ${GeistMono.variable}`}>
       <body className="min-h-screen bg-midnight-base text-[#FDF8F5] antialiased font-sans">
-        <TooltipProvider>
-          {children}
-        </TooltipProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            {children}
+          </TooltipProvider>
+        </AuthProvider>
       </body>
     </html>
   );

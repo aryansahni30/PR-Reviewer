@@ -86,6 +86,7 @@ Rules:
 - The "language" field should be the primary language detected in the diff
 - For Markdown (.md) or documentation files, ONLY flag critical issues (e.g., completely broken formatting). Do NOT flag minor typos, broken reference examples, or stylistic choices. Severity of documentation issues should rarely be "bug".
 - You are provided the full source of each changed file below. Use it to verify whether variables, functions, and imports exist before flagging them as undefined.
+- The "summary" must be written in plain, non-technical language — as if explaining to someone who understands the product but not the code internals. Focus on WHAT changed and WHY it matters, not HOW it was implemented. Avoid jargon like "refactored", "abstracted", "instantiated", "invoked", or specific function/variable names. Keep it to 2-3 sentences max.
 {context_section}
 
 Diff to review:

@@ -16,6 +16,7 @@
     "geist": "^1.7.0",
     "lucide-react": "^0.468.0",
     "next": "^15.5.14",
+    "next-auth": "^4.24.13",
     "react": "^18",
     "react-dom": "^18",
     "shadcn": "^4.1.0",
