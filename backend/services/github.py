@@ -95,14 +95,13 @@ async def post_pr_comment(
     headers = _get_headers(token)
     headers["Content-Type"] = "application/json"
 
-    effective_token = token or os.getenv("GITHUB_TOKEN")
-    if not effective_token:
-        raise ValueError("A GitHub token is required to post comments.")
+    if not token:
+        raise ValueError("A GitHub token is required to post comments. Please sign in with GitHub.")
 
     async with httpx.AsyncClient(timeout=30.0) as client:
         response = await client.post(url, headers=headers, json={"body": body})
         if response.status_code == 401:
-            raise ValueError("GitHub authentication failed. Check your GITHUB_TOKEN.")
+            raise ValueError("GitHub authentication failed. Please sign in again.")
         if response.status_code == 403:
             raise ValueError("Insufficient permissions to post a comment on this PR.")
         if response.status_code == 404:
@@ -126,9 +125,8 @@ async def post_pr_review_comment(
     headers = _get_headers(token)
     headers["Content-Type"] = "application/json"
 
-    effective_token = token or os.getenv("GITHUB_TOKEN")
-    if not effective_token:
-        raise ValueError("A GitHub token is required to post review comments.")
+    if not token:
+        raise ValueError("A GitHub token is required to post review comments. Please sign in with GitHub.")
 
     payload = {
         "body": body,

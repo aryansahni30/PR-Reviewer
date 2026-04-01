@@ -497,6 +497,7 @@ export default function HomePage() {
                     issues={result.issues}
                     prUrl={result.pr_url}
                     headSha={result.head_sha || ""}
+                    githubToken={session?.accessToken}
                   />
                </div>
             )}

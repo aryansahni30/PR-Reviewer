@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Issue, SeverityFilter } from "@/types";
 import { postInlineComment } from "@/lib/api";
+import { signIn } from "next-auth/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -28,6 +29,7 @@ interface InlineDiffReviewProps {
   issues: Issue[];
   prUrl: string;
   headSha: string;
+  githubToken?: string;
 }
 
 type PostStatus = "idle" | "posting" | "posted" | "error";
@@ -137,12 +139,14 @@ function IssueCard({
   snippet,
   prUrl,
   headSha,
+  githubToken,
   index,
 }: {
   issue: Issue;
   snippet: ReturnType<typeof extractSnippet>;
   prUrl: string;
   headSha: string;
+  githubToken?: string;
   index: number;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -154,6 +158,10 @@ function IssueCard({
   const Icon = config.icon;
 
   const handlePost = useCallback(async () => {
+    if (!githubToken) {
+      signIn("github");
+      return;
+    }
     setPostStatus("posting");
     setErrorMsg(null);
     try {
@@ -162,7 +170,8 @@ function IssueCard({
         issue.file,
         issue.line,
         `**${config.label}** (${issue.confidence}% confidence)\n\n${issue.description}`,
-        headSha
+        headSha,
+        githubToken
       );
       setPostStatus("posted");
       setCommentUrl(data.comment_url);
@@ -170,7 +179,7 @@ function IssueCard({
       setPostStatus("error");
       setErrorMsg(err instanceof Error ? err.message : "Failed to post");
     }
-  }, [prUrl, headSha, issue, config.label]);
+  }, [prUrl, headSha, githubToken, issue, config.label]);
 
   return (
     <Card
@@ -305,7 +314,7 @@ function IssueCard({
                 className="gap-1.5 text-xs border-border/60 bg-card/50 text-muted-foreground hover:text-foreground"
               >
                 <MessageSquare className="w-3.5 h-3.5" />
-                Post to GitHub
+                {githubToken ? "Post to GitHub" : "Sign in to post"}
               </Button>
             )}
             {postStatus === "posting" && (
@@ -345,7 +354,7 @@ function IssueCard({
 
 // ─── Main component ───────────────────────────────
 
-export default function InlineDiffReview({ rawDiff, issues, prUrl, headSha }: InlineDiffReviewProps) {
+export default function InlineDiffReview({ rawDiff, issues, prUrl, headSha, githubToken }: InlineDiffReviewProps) {
   const [filter, setFilter] = useState<SeverityFilter>("all");
 
   const issuesWithSnippets = useMemo(() => {
@@ -437,6 +446,7 @@ export default function InlineDiffReview({ rawDiff, issues, prUrl, headSha }: In
               snippet={snippet}
               prUrl={prUrl}
               headSha={headSha}
+              githubToken={githubToken}
               index={idx}
             />
           ))
